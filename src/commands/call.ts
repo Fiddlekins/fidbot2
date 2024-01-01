@@ -6,7 +6,7 @@ import {Command} from "./types";
 
 const data = new SlashCommandBuilder()
   .setName('call')
-  .setDescription(`Make ${config.botName} accuse <subject> of being a <descriptor>.`)
+  .setDescription(`Make ${config.botName} accuse <subject> of being a <descriptor>`)
   .addStringOption(option =>
     option.setName('subject')
       .setDescription('The target of your affection')
@@ -56,9 +56,7 @@ function getDeterminer(descriptor: string): string {
 }
 
 
-
 async function execute(interaction: ChatInputCommandInteraction) {
-  console.log(interaction.toString());
   const subject = interaction.options.getString('subject');
   let descriptor = interaction.options.getString('descriptor');
   if (!subject || !descriptor) {

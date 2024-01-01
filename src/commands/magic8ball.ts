@@ -1,4 +1,5 @@
 import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
+import {Cache} from "../Cache";
 import {getRandomElement} from "../utils/random";
 import {Command} from "./types";
 
@@ -22,8 +23,6 @@ function isValidQuestion(question: string): boolean {
   }
   return true;
 }
-
-const MAX_MEMORY_SIZE = 10000;
 
 enum OutcomeType {
   Positive,
@@ -62,27 +61,11 @@ const OUTCOMES: Record<OutcomeType, string[]> = {
   ]
 };
 
-const memory = new Map<string, OutcomeType>();
-
-function springCleanMemory() {
-  if (memory.size > MAX_MEMORY_SIZE) {
-    let keys = memory.keys();
-    let i = 0;
-    let halfway = memory.size / 2;
-    for (let key of keys) {
-      if (i >= halfway) {
-        break;
-      }
-      memory.delete(key);
-      i++;
-    }
-  }
-}
+const cache = new Cache<string, OutcomeType>(10000);
 
 function getOutcome(question: string): string {
-  springCleanMemory();
-  const outcomeType = memory.get(question) ?? getRandomElement(OUTCOME_TYPES);
-  memory.set(question, outcomeType);
+  const outcomeType = cache.get(question) ?? getRandomElement(OUTCOME_TYPES);
+  cache.set(question, outcomeType);
   return getRandomElement(OUTCOMES[outcomeType]);
 }
 

@@ -102,8 +102,23 @@ export async function autocompleteQuery(interaction: AutocompleteInteraction) {
       simplifiedTitle: simplifyStoryTitle(title)
     };
   });
-  // Discord caps autocomplete to 25 entries
-  const filtered = choices.filter(choice => choice.simplifiedTitle.startsWith(partialTitle)).slice(0, 25);
+  const filtered = choices
+    // Test for position of input value
+    .map(choice => {
+      return {...choice, position: choice.simplifiedTitle.indexOf(partialTitle)};
+    })
+    // If input value isn't present the remove candidate
+    .filter(choice => choice.position >= 0)
+    // Sort those that have it so that priority is given to matches closer to the start of the title
+    // The sub-sort lexicographically
+    .sort((a, b) => {
+      if (a.position === b.position) {
+        return a.title > b.title ? 1 : -1;
+      }
+      return a.position - b.position;
+    })
+    // Discord caps autocomplete to 25 entries
+    .slice(0, 25);
   const options = filtered.map(choice => ({
     name: choice.title,
     value: choice.title

@@ -8,6 +8,7 @@ import {
   spoiler
 } from "discord.js";
 import {clipArray, clipText, discordLimits} from "../../discordLimits";
+import {getGuildSettings} from "../../settings";
 import {getStoryNode} from "./api/getStoryNode";
 import {StoryNode} from "./api/types";
 import {storyNameToIdCache} from "./config";
@@ -18,7 +19,7 @@ import {getUserProfileUrl} from "./utils/getUserProfileUrl";
 import {isId} from "./utils/isId";
 
 function simplifyStoryTitle(title: string): string {
-  return title.replaceAll(/[^A-z]/g, '').toLowerCase();
+  return title.replaceAll(/[^A-z0-9]/g, '').toLowerCase();
 }
 
 function formatTags(tagsAll: string[], tagsSpoiler: string[], maxCharacterCount?: number): string {
@@ -94,9 +95,10 @@ function formatDescription(storyNode: StoryNode): string {
 }
 
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
+  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id).akun : false;
   const potentialIdOrTitle = interaction.options.getString('title');
   if (potentialIdOrTitle) {
-    await interaction.deferReply();
+    await interaction.deferReply({ephemeral});
     let storyNode: StoryNode | null = null;
     // If the input matches the ID pattern then try to retrieve a story with it
     // We check as raw ID first to avoid funny pranks where someone creates a story with the title set to another story's ID
@@ -154,7 +156,10 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
       await interaction.editReply('Failed to find the quest');
     }
   } else {
-    await interaction.reply(`You've discovered a terrible secret...`);
+    await interaction.reply({
+      content: `You've discovered a terrible secret...`,
+      ephemeral
+    });
   }
 }
 

@@ -1,5 +1,6 @@
 import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
 import {Cache} from "../Cache";
+import {getGuildSettings} from "../settings";
 import {getRandomElement} from "../utils/random";
 import {Command} from "./types";
 
@@ -61,7 +62,12 @@ const OUTCOMES: Record<OutcomeType, string[]> = {
   ]
 };
 
-const cache = new Cache<string, OutcomeType>(10000);
+const cache = new Cache<OutcomeType>({
+  id: 'magic8ballCache',
+  maxSize: 10000,
+  persist: true,
+  saveInterval: 10000,
+});
 
 function getOutcome(question: string): string {
   const outcomeType = cache.get(question) ?? getRandomElement(OUTCOME_TYPES);
@@ -70,8 +76,9 @@ function getOutcome(question: string): string {
 }
 
 async function execute(interaction: ChatInputCommandInteraction) {
+  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id)["8ball"] : false;
   const question = interaction.options.getString('question');
-  let reply = question ? `You asked "${question}".` : `You asked... NOTHING!`;
+  let reply = question ? `You asked "${question}"` : `You asked... NOTHING!`;
   if (question) {
     if (isValidQuestion(question)) {
       reply += `\n${getOutcome(question)}`;
@@ -79,7 +86,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
       reply += `\nPlease ask a valid question!`;
     }
   }
-  await interaction.reply(reply);
+  await interaction.reply({content: reply, ephemeral});
 }
 
 export const magic8ball: Command = {

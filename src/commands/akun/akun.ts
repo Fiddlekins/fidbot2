@@ -15,7 +15,7 @@ const data = new SlashCommandBuilder()
   .addSubcommand(subcommand =>
     subcommand
       .setName('query')
-      .setDescription('Get an overview a given quest')
+      .setDescription('Get an overview of a given quest')
       .addStringOption(option =>
         option.setName('title')
           .setDescription('The title of the quest (or its ID)')

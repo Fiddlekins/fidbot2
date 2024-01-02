@@ -12,13 +12,18 @@ export const COOKIE = [
   'ajs_user_id=%22C8x2fwWvtRvr4CyFm%22',
 ].join(' ');
 
-export const storyNameToIdCache = new Cache<string, string>(100000);
+export const storyNameToIdCache = new Cache<string>({
+  id: 'storyNameToIdCache',
+  maxSize: 100000,
+  persist: true,
+  saveInterval: 10000,
+});
 
 async function prepopulateStoryCache() {
   let page = 1;
   let partialStoryNodes;
   do {
-    console.log(`Warming akun story cache. Completed page ${page}, total retrieved stories ${storyNameToIdCache.size()}`);
+    console.log(`Warming akun story cache. Completed page ${page}, total retrieved stories ${storyNameToIdCache.size}`);
     partialStoryNodes = await getStories(page);
     // Limit rate a bit to avoid any mishap
     await setTimeout(1000);

@@ -40,6 +40,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     } catch (error) {
       console.error(error);
     }
+  } else if (interaction.isModalSubmit()) {
+    const [commandName] = interaction.customId.split('/');
+    const command = commands.get(commandName);
+    if (!command) {
+      console.error(`No command matching ${commandName} was found.`);
+      return;
+    }
+    if (!command.modalSubmit) {
+      console.error(`Matching command ${commandName} has no modalSubmit handler defined.`);
+      return;
+    }
+    try {
+      await command.modalSubmit(interaction);
+    } catch (error) {
+      console.error(error);
+    }
   }
 });
 

@@ -1,47 +1,118 @@
-export class Cache<KeyType, ValueType> {
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {setTimeout} from 'node:timers/promises'
+import {config} from "./config";
+
+export interface CacheSettings {
+  id: string;
+  maxSize?: number;
+  persist?: boolean;
+  saveInterval?: number;
+}
+
+const usedIds = new Set<string>();
+
+function getPersistPath(persistPath: string, id: string): string {
+  return path.join(persistPath, `${id}.json`);
+}
+
+export class Cache<ValueType> {
+
+  readonly id: string;
 
   readonly maxSize: number;
 
-  readonly memory: Map<KeyType, ValueType> = new Map();
+  readonly persist: boolean;
 
-  constructor(maxSize: number = 10000) {
-    this.maxSize = maxSize;
+  readonly persistPath: string;
+
+  readonly saveInterval: number;
+
+  readonly memory: Record<string, ValueType>;
+
+  isDirty: boolean;
+
+  constructor({id, maxSize, persist, saveInterval}: CacheSettings) {
+    if (usedIds.has(id)) {
+      throw new Error(`Attempted to create new Cache with already used ID: ${id}`);
+    }
+    usedIds.add(id);
+    this.id = id;
+    this.maxSize = maxSize || 10000;
+    this.persist = Boolean(persist);
+    this.persistPath = getPersistPath(config.persistDataPath, id);
+    this.saveInterval = saveInterval || 10000;
+    this.isDirty = false;
+    this.memory = {};
+    this.load().catch(console.error);
   }
 
-  get(key: KeyType): ValueType | undefined {
-    return this.memory.get(key);
+  private async load() {
+    if (this.persist) {
+      try {
+        await fs.mkdir(config.persistDataPath, {recursive: true});
+      } catch (err) {
+        // If it already exists ignore the error
+      }
+      try {
+        const loadedMemory = JSON.parse(await fs.readFile(this.persistPath, 'utf8')) as Record<string, ValueType>;
+        for (const key of Object.keys(loadedMemory)) {
+          this.memory[key] = loadedMemory[key];
+        }
+      } catch (err) {
+        // C'est la vie
+      }
+      this.save().catch(console.error);
+    }
   }
 
-  set(key: KeyType, value: ValueType) {
+  private async save() {
+    if (this.persist) {
+      if (this.isDirty) {
+        this.isDirty = false;
+        await fs.writeFile(this.persistPath, JSON.stringify(this.memory, null, 2), 'utf8');
+      }
+      await setTimeout(this.saveInterval);
+      this.save().catch(console.error);
+    }
+  }
+
+  get(key: string): ValueType | undefined {
+    return this.memory[key];
+  }
+
+  set(key: string, value: ValueType) {
     this.springCleanMemory();
-    this.memory.set(key, value);
+    this.memory[key] = value;
+    this.isDirty = true;
   }
 
   keys() {
-    return this.memory.keys();
+    return Object.keys(this.memory);
   }
 
   values() {
-    return this.memory.values();
+    return Object.values(this.memory);
   }
 
-  size() {
-    return this.memory.size;
+  get size() {
+    return this.keys().length;
   }
 
   springCleanMemory() {
-    if (this.memory.size > this.maxSize) {
-      const keys = this.memory.keys();
-      const halfway = this.memory.size / 2;
+    if (this.size > this.maxSize) {
+      const keys = this.keys();
+      const halfway = this.size / 2;
       let i = 0;
       // Keys are probably returned based on order of being added, making this typically remove oldest items first
       for (const key of keys) {
         if (i >= halfway) {
           break;
         }
-        this.memory.delete(key);
+        delete this.memory[key];
         i++;
       }
+      this.isDirty = true;
     }
   }
 }

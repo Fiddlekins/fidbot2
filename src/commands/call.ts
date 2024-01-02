@@ -1,5 +1,6 @@
 import {ChatInputCommandInteraction, Collection, GuildMember, SlashCommandBuilder, userMention} from "discord.js";
 import {config} from "../config";
+import {getGuildSettings} from "../settings";
 import {extractUserNamesOrTagsFromText} from "../utils/extractUserNamesOrTagsFromText";
 import {getRandomInt, getRandomIntInRange} from "../utils/random";
 import {Command} from "./types";
@@ -57,10 +58,14 @@ function getDeterminer(descriptor: string): string {
 
 
 async function execute(interaction: ChatInputCommandInteraction) {
+  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id).call : false;
   const subject = interaction.options.getString('subject');
   let descriptor = interaction.options.getString('descriptor');
   if (!subject || !descriptor) {
-    await interaction.reply('That was a malformed accusation!');
+    await interaction.reply({
+      content: 'That was a malformed accusation!',
+      ephemeral
+    });
   } else {
     if (isSubjectSelf(subject, interaction)) {
       descriptor = 'wonderful creation';
@@ -104,7 +109,10 @@ async function execute(interaction: ChatInputCommandInteraction) {
         processedSubject += chunk;
       }
     }
-    await interaction.reply(`${processedSubject} is ${determiner} ${descriptor}! ${determiner.toUpperCase()} ${slurYelled}`);
+    await interaction.reply({
+      content: `${processedSubject} is ${determiner} ${descriptor}! ${determiner.toUpperCase()} ${slurYelled}`,
+      ephemeral
+    });
   }
 }
 

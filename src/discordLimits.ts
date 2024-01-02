@@ -4,6 +4,11 @@ const autocomplete = {
   choiceValueLength: 100,
 }
 
+const component = {
+  rowCount: 5,
+  elementCount: 5,
+}
+
 const embed = {
   titleLength: 256,
   descriptionLength: 4096,
@@ -16,9 +21,18 @@ const embed = {
   embedsPerMessageCount: 10,
 }
 
+const modal = {
+  customIdLength: 100,
+  rowCount: 5,
+  textInputLabelLength: 45,
+  textInputPlaceholderLength: 100,
+}
+
 export const discordLimits = {
   autocomplete,
+  component,
   embed,
+  modal,
 }
 
 export function clipText(text: string, maxLength: number): string {

@@ -156,6 +156,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"akun-dice@https://github.com/Fiddlekins/akun-dice.git":
+  version: 1.0.0
+  resolution: "akun-dice@https://github.com/Fiddlekins/akun-dice.git#commit=d262cb6a073722771d895db668240255e14de74c"
+  checksum: 39b81399e4519669b6f39d22cdbfeb7626260b14c05c48e687b75c414a482b00df541668d3ad58037e93cc610494c3846175fc7cabbe02a1d994e10dd1d0efc4
+  languageName: node
+  linkType: hard
+
 "discord-api-types@npm:0.37.61":
   version: 0.37.61
   resolution: "discord-api-types@npm:0.37.61"
@@ -204,6 +211,7 @@ __metadata:
   resolution: "fidbot2@workspace:."
   dependencies:
     "@types/node": ^20.10.5
+    akun-dice: "https://github.com/Fiddlekins/akun-dice.git"
     discord.js: ^14.14.1
     dotenv: ^16.3.1
     typescript: ^5.3.3

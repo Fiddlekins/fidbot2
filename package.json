@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "akun-dice": "https://github.com/Fiddlekins/akun-dice.git",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1"
   },

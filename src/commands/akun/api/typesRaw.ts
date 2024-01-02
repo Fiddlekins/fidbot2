@@ -69,8 +69,15 @@ export interface ReplyMetaRaw {
 export interface ChatNodeRaw extends BaseNodeRaw {
   /**
    * The chat node body
+   * Missing if the chat node was an image post
    */
-  b: string;
+  b?: string;
+
+  /**
+   * The image URL
+   * Missing if the chat node was a text post
+   */
+  i?: string;
 
   /**
    * Node type is always 'chat'

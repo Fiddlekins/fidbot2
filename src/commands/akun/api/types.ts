@@ -28,8 +28,9 @@ export interface BaseNode {
 export interface User {
   /**
    * Unique ID of the user
+   * Absent if the user is anon
    */
-  id: string;
+  id?: string;
 
   /**
    * Avatar image URL
@@ -62,8 +63,15 @@ export interface ReplyMeta {
 export interface ChatNode extends BaseNode {
   /**
    * The chat node body
+   * Missing if the chat node was an image post
    */
-  body: string;
+  body?: string;
+
+  /**
+   * The image URL
+   * Missing if the chat node was a text post
+   */
+  image?: string;
 
   /**
    * Node type is always 'chat'

@@ -72,7 +72,7 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
         // embed = embed.setImage(coverImage)
         embed = embed.setThumbnail(coverImage)
       }
-      if (storyNode.lastReply?.nodeType === 'chat') {
+      if (storyNode.lastReply?.nodeType === 'chat' && storyNode.lastReply.body) {
         try {
           const [author] = storyNode.lastReply.users;
           const [firstParagraph] = storyNode.lastReply.body.split('\n');
@@ -84,9 +84,7 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
           console.error(JSON.stringify(storyNode));
         }
       }
-
-      interaction.channel?.send({embeds: [embed]});
-      await interaction.editReply('Quest located!');
+      await interaction.editReply({embeds: [embed]});
     } else {
       await interaction.editReply('Failed to find the quest');
     }

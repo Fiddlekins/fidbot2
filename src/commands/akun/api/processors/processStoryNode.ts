@@ -3,14 +3,14 @@ import {StoryNode} from "../types";
 import {StoryNodeRaw} from "../typesRaw";
 import {processChapterMeta} from "./processChapterMeta";
 import {processChatNode} from "./processChatNode";
-import {processUser} from "./processUser";
+import {processUsers} from "./processUsers";
 
 export function processStoryNode(storyNodeRaw: StoryNodeRaw): StoryNode {
   return {
     id: storyNodeRaw._id,
     timeCreated: new Date(storyNodeRaw.ct),
     timeUpdated: new Date(storyNodeRaw.ut),
-    users: storyNodeRaw.u.map(processUser),
+    users: processUsers(storyNodeRaw.u),
 
     chapters: storyNodeRaw.bm.map(processChapterMeta),
     commentCount: storyNodeRaw.p,

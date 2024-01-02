@@ -17,7 +17,7 @@ export interface BaseNodeRaw {
   /**
    * The node owners
    */
-  u: UserRaw[]
+  u: string | UserRaw[]
 
   /**
    * Timestamp of latest node update
@@ -28,8 +28,9 @@ export interface BaseNodeRaw {
 export interface UserRaw {
   /**
    * Unique ID of the user
+   * Absent if the user is anon
    */
-  _id: string;
+  _id?: string;
 
   /**
    * Avatar image URL
@@ -62,7 +63,7 @@ export interface ReplyMetaRaw {
   /**
    * The chat node owners
    */
-  u?: UserRaw[]
+  u?: string | UserRaw[]
 }
 
 export interface ChatNodeRaw extends BaseNodeRaw {

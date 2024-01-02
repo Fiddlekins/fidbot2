@@ -1,13 +1,13 @@
 import {imageURLParser} from "../../utils/imageURLParser";
 import {LiveStoryMeta} from "../types";
 import {LiveStoryMetaRaw} from "../typesRaw";
-import {processUser} from "./processUser";
+import {processUsers} from "./processUsers";
 
 export function processLiveStoryMeta(liveStoryMetaRaw: LiveStoryMetaRaw): LiveStoryMeta {
   return {
     id: liveStoryMetaRaw._id,
     timeUpdated: new Date(liveStoryMetaRaw.ut),
-    users: liveStoryMetaRaw.u.map(processUser),
+    users: processUsers(liveStoryMetaRaw.u),
 
     commentCount: liveStoryMetaRaw.p,
     contentRating: liveStoryMetaRaw.contentRating,

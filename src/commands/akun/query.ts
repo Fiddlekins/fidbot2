@@ -6,6 +6,7 @@ import {getCleanBody} from "./utils/getCleanBody";
 import {getReadTime} from "./utils/getReadTime";
 import {getStoryUrl} from "./utils/getStoryUrl";
 import {getUserProfileUrl} from "./utils/getUserProfileUrl";
+import {isId} from "./utils/isId";
 
 function simplifyStoryTitle(title: string): string {
   return title.replaceAll(/[^A-z]/g, '').toLowerCase();
@@ -22,28 +23,21 @@ function formatTags(tagsAll: string[], tagsSpoiler: string[]): string {
 }
 
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
-  const title = interaction.options.getString('title');
-  if (title) {
+  const potentialIdOrTitle = interaction.options.getString('title');
+  if (potentialIdOrTitle) {
     await interaction.deferReply();
-    const id = storyNameToIdCache.get(title);
-    let responseTitle: StoryNode | null = null;
-    let responseId: StoryNode | null = null;
-    if (id) {
-      // If we have both a title and a story ID that matches it, check as if both were the story ID
-      // This is because someone could try to prank the bot by giving one story the ID of another
-      // If this happens, the response for the title used as an ID is given priority
-      [
-        responseTitle,
-        responseId,
-      ] = await Promise.all([
-        getStoryNode(title),
-        getStoryNode(id),
-      ]);
-    } else {
-      // If no cache hits for the title then assume title is ID
-      responseTitle = await getStoryNode(title);
+    let storyNode: StoryNode | null = null;
+    // If the input matches the ID pattern then try to retrieve a story with it
+    // We check as raw ID first to avoid funny pranks where someone creates a story with the title set to another story's ID
+    if (isId(potentialIdOrTitle)) {
+      storyNode = await getStoryNode(potentialIdOrTitle);
     }
-    const storyNode = responseTitle || responseId;
+    // If the input used as a raw ID didn't retrieve anything, then see if the cache recognises it as a title
+    const cachedId = storyNameToIdCache.get(potentialIdOrTitle);
+    if (!storyNode && cachedId) {
+      storyNode = await getStoryNode(cachedId);
+    }
+    // If we still couldn't find a storyNode then the input is either invalid or the cache is incomplete
     if (storyNode) {
       let embed = new EmbedBuilder()
         .setTitle(storyNode.title)
@@ -58,7 +52,6 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
         .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
         .addFields({name: 'Read time', value: getReadTime(storyNode.wordCount), inline: true})
         .addFields({name: 'Comments', value: storyNode.commentCount.toString(), inline: true})
-      // .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
       const [author] = storyNode.users;
       if (author) {
         if (author.avatar) {
@@ -79,9 +72,21 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
         // embed = embed.setImage(coverImage)
         embed = embed.setThumbnail(coverImage)
       }
+      if (storyNode.lastReply?.nodeType === 'chat') {
+        try {
+          const [author] = storyNode.lastReply.users;
+          const [firstParagraph] = storyNode.lastReply.body.split('\n');
+          const quote = firstParagraph.length > 120 ? `${firstParagraph.slice(0, 117)}...` : firstParagraph;
+          const text = `${author?.username || 'Anon'}: "${quote}"`;
+          embed = embed.setFooter({text, iconURL: author?.avatar});
+        } catch (err) {
+          console.error(err);
+          console.error(JSON.stringify(storyNode));
+        }
+      }
 
       interaction.channel?.send({embeds: [embed]});
-      await interaction.deleteReply();
+      await interaction.editReply('Quest located!');
     } else {
       await interaction.editReply('Failed to find the quest');
     }
@@ -103,7 +108,7 @@ export async function autocompleteQuery(interaction: AutocompleteInteraction) {
   const filtered = choices.filter(choice => choice.simplifiedTitle.startsWith(partialTitle)).slice(0, 25);
   const options = filtered.map(choice => ({
     name: choice.title,
-    value: storyNameToIdCache.get(choice.title) || choice.title
+    value: choice.title
   }));
   await interaction.respond(options);
 }

@@ -25,6 +25,10 @@ export class Cache<KeyType, ValueType> {
     return this.memory.values();
   }
 
+  size() {
+    return this.memory.size;
+  }
+
   springCleanMemory() {
     if (this.memory.size > this.maxSize) {
       const keys = this.memory.keys();

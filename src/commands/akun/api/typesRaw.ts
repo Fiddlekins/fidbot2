@@ -121,8 +121,9 @@ export interface ChapterMetaRaw {
 export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * List of the chapters
+   * Missing if the author has never created a new chapter
    */
-  bm: ChapterMetaRaw[];
+  bm?: ChapterMetaRaw[];
 
   /**
    * TODO
@@ -147,7 +148,7 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * TODO
    */
-  dn: string;
+  dn?: string;
 
   /**
    * The story's cover image
@@ -163,17 +164,17 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * Whether the story is currently live
    */
-  isLive: boolean;
+  isLive?: boolean;
 
   /**
    * The number of "likes" a story has received
    */
-  likeCount: number;
+  likeCount?: number;
 
   /**
    * Last reply node
    */
-  lr: ChatNodeRaw;
+  lr?: ChatNodeRaw;
 
   /**
    * TODO
@@ -183,12 +184,12 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * TODO
    */
-  mod: unknown[];
+  mod?: unknown[];
 
   /**
    * Timestamp of scheduled live session
    */
-  nextLive: number | null;
+  nextLive?: number | null;
 
   /**
    * Node type is always 'story'
@@ -198,17 +199,17 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * Number of user comments on the story
    */
-  p: number;
+  p?: number;
 
   /**
    * "Level of Voting Control"
    */
-  rInput: 'none' | 'light' | 'medium' | 'heavy';
+  rInput?: 'none' | 'light' | 'medium' | 'heavy';
 
   /**
    * "Story Interactivity"
    */
-  rInteract: 'none' | 'light' | 'medium' | 'heavy';
+  rInteract?: 'none' | 'light' | 'medium' | 'heavy';
 
   /**
    * TODO
@@ -243,7 +244,12 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   /**
    * TODO
    */
-  u2: unknown[];
+  u2?: unknown[];
+
+  /**
+   * Whether only users that are "verified" can interact with the story
+   */
+  verifiedOnly?: boolean;
 
   /**
    * Word count
@@ -251,7 +257,7 @@ export interface StoryNodeRaw extends BaseNodeRaw {
   w: number;
 }
 
-export interface LiveStoryMetaRaw extends Pick<StoryNodeRaw, 'd' | 'i' | 'likeCount' | 'ta' | 'cht' | 'p' | 'isLive' | 't' | 'u' | 'w' | 'contentRating' | 'ut' | '_id'> {
+export interface PartialStoryNodeRaw extends Pick<StoryNodeRaw, 'd' | 'i' | 'likeCount' | 'ta' | 'cht' | 'p' | 'isLive' | 't' | 'u' | 'w' | 'contentRating' | 'ut' | '_id'> {
   /**
    * TODO
    */
@@ -259,7 +265,12 @@ export interface LiveStoryMetaRaw extends Pick<StoryNodeRaw, 'd' | 'i' | 'likeCo
 }
 
 export interface LiveResponse {
-  stories: LiveStoryMetaRaw[]
+  stories: PartialStoryNodeRaw[]
+}
+
+export interface StoriesResponse {
+  stories: PartialStoryNodeRaw[]
+  storiesByHype: PartialStoryNodeRaw[]
 }
 
 export interface ChannelPresence {

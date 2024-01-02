@@ -1,4 +1,13 @@
-import {AutocompleteInteraction, ChatInputCommandInteraction, EmbedBuilder, inlineCode, spoiler} from "discord.js";
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  EmbedAuthorOptions,
+  EmbedBuilder,
+  escapeMarkdown,
+  inlineCode,
+  spoiler
+} from "discord.js";
+import {clipArray, clipText, discordLimits} from "../../discordLimits";
 import {getStoryNode} from "./api/getStoryNode";
 import {StoryNode} from "./api/types";
 import {storyNameToIdCache} from "./config";
@@ -12,14 +21,76 @@ function simplifyStoryTitle(title: string): string {
   return title.replaceAll(/[^A-z]/g, '').toLowerCase();
 }
 
-function formatTags(tagsAll: string[], tagsSpoiler: string[]): string {
-  return tagsAll.map((tag) => {
-    let wrappedTag: string = inlineCode(tag);
+function formatTags(tagsAll: string[], tagsSpoiler: string[], maxCharacterCount?: number): string {
+  const formattedNonSpoilerTags: string[] = [];
+  const formattedSpoilerTags: string[] = [];
+  let nonSpoilerTagCharCount = 0;
+  let spoilerTagCharCount = 0;
+  for (const tag of tagsAll) {
+    let wrappedTag: string = inlineCode(escapeMarkdown(tag));
     if (tagsSpoiler.includes(tag)) {
       wrappedTag = spoiler(wrappedTag);
+      formattedSpoilerTags.push(wrappedTag);
+      spoilerTagCharCount += wrappedTag.length + 1;
+    } else {
+      formattedNonSpoilerTags.push(wrappedTag);
+      nonSpoilerTagCharCount += wrappedTag.length + 1;
     }
-    return wrappedTag;
-  }).join(' ');
+  }
+  // If there's no limit just join them all and return
+  if (!maxCharacterCount) {
+    return `${formattedNonSpoilerTags.join(' ')} ${formattedSpoilerTags.join(' ')}`;
+  }
+  // Otherwise we need to keep only whole tags that collectively fit within the total limits
+  // Whilst also splitting using the ratio of spoiler to non-spoiler so that we get a healthy blend
+  const clippedFormattedNonSpoilerTags: string[] = [];
+  const clippedFormattedSpoilerTags: string[] = [];
+  let remainingNonSpoilerTagCharCount = Math.floor(maxCharacterCount * (nonSpoilerTagCharCount / (nonSpoilerTagCharCount + spoilerTagCharCount)));
+  let remainingSpoilerTagCharCount = Math.floor(maxCharacterCount * (spoilerTagCharCount / (nonSpoilerTagCharCount + spoilerTagCharCount)));
+  for (const tag of formattedNonSpoilerTags) {
+    // +1 to account for joining space
+    remainingNonSpoilerTagCharCount -= tag.length + 1;
+    if (remainingNonSpoilerTagCharCount >= 0) {
+      clippedFormattedNonSpoilerTags.push(tag);
+    } else {
+      break;
+    }
+  }
+  for (const tag of formattedSpoilerTags) {
+    remainingSpoilerTagCharCount -= tag.length + 1;
+    if (remainingSpoilerTagCharCount >= 0) {
+      clippedFormattedSpoilerTags.push(tag);
+    } else {
+      break;
+    }
+  }
+  return `${clippedFormattedNonSpoilerTags.join(' ')} ${clippedFormattedSpoilerTags.join(' ')}`;
+}
+
+function formatDescription(storyNode: StoryNode): string {
+  let descriptionBody = escapeMarkdown(getCleanBody(storyNode.description));
+  let descriptionTags = formatTags(storyNode.tagsAll, storyNode.tagsSpoiler);
+  const spareCharacterCount = 10;
+  // Recreate them but clipped to an amount based on their relative size
+  descriptionBody = clipText(
+    descriptionBody,
+    Math.floor(
+      (discordLimits.embed.descriptionLength - spareCharacterCount)
+      * (descriptionBody.length / (descriptionBody.length + descriptionTags.length))
+    )
+  );
+  descriptionTags = formatTags(
+    storyNode.tagsAll, storyNode.tagsSpoiler,
+    Math.floor(
+      (discordLimits.embed.descriptionLength - spareCharacterCount)
+      * (descriptionTags.length / (descriptionBody.length + descriptionTags.length))
+    )
+  );
+  return [
+    descriptionBody,
+    '',
+    descriptionTags,
+  ].join('\n');
 }
 
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
@@ -40,32 +111,22 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
     // If we still couldn't find a storyNode then the input is either invalid or the cache is incomplete
     if (storyNode) {
       let embed = new EmbedBuilder()
-        .setTitle(storyNode.title)
+        .setTitle(clipText(escapeMarkdown(storyNode.title), discordLimits.embed.titleLength))
         .setURL(getStoryUrl(storyNode.id, storyNode.title))
-        .setDescription(
-          [
-            getCleanBody(storyNode.description),
-            '',
-            formatTags(storyNode.tagsAll, storyNode.tagsSpoiler),
-          ].join('\n')
-        )
+        .setDescription(clipText(formatDescription(storyNode), discordLimits.embed.descriptionLength))
         .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
         .addFields({name: 'Read time', value: getReadTime(storyNode.wordCount), inline: true})
         .addFields({name: 'Comments', value: storyNode.commentCount.toString(), inline: true})
       const [author] = storyNode.users;
       if (author) {
+        const embedAuthorOptions: EmbedAuthorOptions = {
+          name: clipText(author.username, discordLimits.embed.authorNameLength),
+          url: getUserProfileUrl(author.username)
+        };
         if (author.avatar) {
-          embed = embed.setAuthor({
-            name: author.username,
-            iconURL: author.avatar,
-            url: getUserProfileUrl(author.username)
-          })
-        } else {
-          embed = embed.setAuthor({
-            name: author.username,
-            url: getUserProfileUrl(author.username)
-          })
+          embedAuthorOptions.iconURL = author.avatar;
         }
+        embed = embed.setAuthor(embedAuthorOptions);
       }
       const [coverImage] = storyNode.coverImages;
       if (coverImage) {
@@ -73,12 +134,16 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
         embed = embed.setThumbnail(coverImage)
       }
       if (storyNode.lastReply?.nodeType === 'chat' && storyNode.lastReply.body) {
+        // Less tested and more optional, so wrap in try-catch
         try {
           const [author] = storyNode.lastReply.users;
           const [firstParagraph] = storyNode.lastReply.body.split('\n');
-          const quote = firstParagraph.length > 120 ? `${firstParagraph.slice(0, 117)}...` : firstParagraph;
-          const text = `${author?.username || 'Anon'}: "${quote}"`;
-          embed = embed.setFooter({text, iconURL: author?.avatar});
+          // Footer limit is a lot larger than desired quote length, so clip some more
+          const text = `${author?.username || 'Anon'}: "${clipText(firstParagraph, 240)}"`;
+          embed = embed.setFooter({
+            text: clipText(text, discordLimits.embed.footerLength),
+            iconURL: author?.avatar
+          });
         } catch (err) {
           console.error(err);
           console.error(JSON.stringify(storyNode));
@@ -116,12 +181,27 @@ export async function autocompleteQuery(interaction: AutocompleteInteraction) {
         return a.title > b.title ? 1 : -1;
       }
       return a.position - b.position;
+    });
+  const options = clipArray(filtered, discordLimits.autocomplete.choiceCount)
+    .map(choice => {
+      // If the title is lacking, give up
+      if (choice.title.length < 1) {
+        return null;
+      }
+      if (choice.title.length > discordLimits.autocomplete.choiceNameLength) {
+        // Truncate the label, and use the ID for the value
+        //   (not ideal because it's gibberish in the final command preview, but it works around the length limit)
+        return {
+          name: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
+          value: storyNameToIdCache.get(choice.title)
+        }
+      }
+      // Desired behaviour, use the full title as label and value
+      return {
+        name: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
+        value: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
+      };
     })
-    // Discord caps autocomplete to 25 entries
-    .slice(0, 25);
-  const options = filtered.map(choice => ({
-    name: choice.title,
-    value: choice.title
-  }));
+    .filter((choice): choice is { name: string, value: string } => choice !== null);
   await interaction.respond(options);
 }

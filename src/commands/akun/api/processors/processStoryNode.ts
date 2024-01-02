@@ -12,17 +12,17 @@ export function processStoryNode(storyNodeRaw: StoryNodeRaw): StoryNode {
     timeUpdated: new Date(storyNodeRaw.ut),
     users: processUsers(storyNodeRaw.u),
 
-    chapters: storyNodeRaw.bm.map(processChapterMeta),
-    commentCount: storyNodeRaw.p,
+    chapters: storyNodeRaw.bm?.map(processChapterMeta) || [],
+    commentCount: storyNodeRaw.p || 0,
     contentRating: storyNodeRaw.contentRating,
     coverImages: storyNodeRaw.i
         ?.map(imageUrl => imageURLParser(imageUrl))
         .filter((parsedUrl): parsedUrl is string => !!parsedUrl)
       || [],
     description: storyNodeRaw.d,
-    isLive: storyNodeRaw.isLive,
-    lastReply: processChatNode(storyNodeRaw.lr),
-    likeCount: storyNodeRaw.likeCount,
+    isLive: storyNodeRaw.isLive || false,
+    lastReply: storyNodeRaw.lr ? processChatNode(storyNodeRaw.lr) : null,
+    likeCount: storyNodeRaw.likeCount || 0,
     nextLive: storyNodeRaw.nextLive ? new Date(storyNodeRaw.nextLive) : undefined,
     nodeType: storyNodeRaw.nt,
     readerInput: storyNodeRaw.rInput,

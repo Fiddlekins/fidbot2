@@ -162,7 +162,7 @@ export interface StoryNode extends BaseNode {
   /**
    * Last reply node
    */
-  lastReply: ChatNode;
+  lastReply: ChatNode | null;
 
   /**
    * The number of "likes" a story has received
@@ -192,12 +192,12 @@ export interface StoryNode extends BaseNode {
   /**
    * "Level of Voting Control"
    */
-  readerInput: 'none' | 'light' | 'medium' | 'heavy';
+  readerInput?: 'none' | 'light' | 'medium' | 'heavy';
 
   /**
    * "Story Interactivity"
    */
-  readerInteractivity: 'none' | 'light' | 'medium' | 'heavy';
+  readerInteractivity?: 'none' | 'light' | 'medium' | 'heavy';
 
   /**
    * TODO
@@ -240,7 +240,7 @@ export interface StoryNode extends BaseNode {
   wordCount: number;
 }
 
-export interface LiveStoryMeta extends Pick<StoryNode, 'description' | 'coverImages' | 'likeCount' | 'tagsAll' | 'commentCount' | 'isLive' | 'title' | 'users' | 'wordCount' | 'contentRating' | 'timeUpdated' | 'id'> {
+export interface PartialStoryNode extends Pick<StoryNode, 'description' | 'coverImages' | 'likeCount' | 'tagsAll' | 'commentCount' | 'isLive' | 'title' | 'users' | 'wordCount' | 'contentRating' | 'timeUpdated' | 'id'> {
   /**
    * TODO
    */

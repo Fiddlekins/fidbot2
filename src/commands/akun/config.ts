@@ -1,4 +1,6 @@
+import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../../Cache";
+import {getStories} from "./api/getStories";
 
 export const HOSTNAME = 'https://fiction.live';
 
@@ -11,3 +13,18 @@ export const COOKIE = [
 ].join(' ');
 
 export const storyNameToIdCache = new Cache<string, string>(100000);
+
+async function prepopulateStoryCache() {
+  let page = 1;
+  let partialStoryNodes;
+  do {
+    console.log(`Warming akun story cache. Completed page ${page}, total retrieved stories ${storyNameToIdCache.size()}`);
+    partialStoryNodes = await getStories(page);
+    // Limit rate a bit to avoid any mishap
+    await setTimeout(1000);
+    page++;
+  }
+  while (partialStoryNodes.length > 0);
+}
+
+prepopulateStoryCache().catch(console.error);

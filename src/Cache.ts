@@ -5,6 +5,9 @@ import {config} from "./config";
 
 export interface CacheSettings {
   id: string;
+  /**
+   * If set to 0 then the cache will not have a size limit
+   */
   maxSize?: number;
   persist?: boolean;
   saveInterval?: number;
@@ -38,7 +41,7 @@ export class Cache<ValueType> {
     }
     activeCaches.set(id, this);
     this.id = id;
-    this.maxSize = maxSize || 10000;
+    this.maxSize = maxSize ?? 10000;
     this.persist = Boolean(persist);
     this.persistPath = getPersistPath(config.persistDataPath, id);
     this.saveInterval = saveInterval || 10000;
@@ -108,7 +111,7 @@ export class Cache<ValueType> {
   }
 
   springCleanMemory() {
-    if (this.size > this.maxSize) {
+    if (this.maxSize > 0 && this.size > this.maxSize) {
       const keys = this.keys();
       const halfway = this.size / 2;
       let i = 0;

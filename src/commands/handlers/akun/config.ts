@@ -14,7 +14,7 @@ export const COOKIE = [
 
 export const storyNameToIdCache = new Cache<string>({
   id: 'storyNameToIdCache',
-  maxSize: 100000,
+  maxSize: 0,
   persist: true,
   saveInterval: 10000,
 });

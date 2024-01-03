@@ -6,6 +6,10 @@ export const akunData = new SlashCommandBuilder()
   .addSubcommand(subcommand => subcommand
     .setName('live')
     .setDescription('View a list of currently live quests')
+    .addIntegerOption(option => option
+      .setName('page')
+      .setDescription('Start on the given page')
+    )
   )
   .addSubcommand(subcommand => subcommand
     .setName('query')

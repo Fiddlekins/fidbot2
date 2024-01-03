@@ -14,6 +14,10 @@ export function getTotalPageCount<Type>(elements: Type[]): number {
   return Math.ceil(elements.length / getElementsPerPage());
 }
 
+export function clampPage<Type>(page: number, elements: Type[]): number {
+  return Math.min(Math.max(page, 0), getTotalPageCount(elements) - 1);
+}
+
 export function getPaginatedButtons<Type>(
   elements: Type[],
   page: number,
@@ -78,25 +82,46 @@ export function getPaginatedButtons<Type>(
   }
 }
 
+export interface ExecutePaginatedButtonsOptions {
+  handleButton?: (customId: string) => Promise<void>,
+  wasDeferred?: boolean,
+  ephemeral?: boolean;
+  hasFinishControl?: boolean;
+  timeoutDuration?: number;
+  initialPage?: number;
+}
+
 export async function executePaginatedButtons<Type>(
   interaction: ChatInputCommandInteraction,
   getElements: () => Promise<Type[]>,
-  getContent: (state: PaginatedButtonsState, error?: unknown) => Promise<string>,
+  getContent: (state: PaginatedButtonsState, error?: unknown) => Promise<string | null>,
   elementButtonBuilder: (element: Type, isActive: boolean) => ButtonBuilder,
-  handleButton: (customId: string) => Promise<void>,
-  hasFinishControl: boolean = false,
-  timeoutDuration: number = 60_000,
+  options?: ExecutePaginatedButtonsOptions,
 ) {
+  const handleButton = options?.handleButton || null;
+  const wasDeferred = options?.wasDeferred || false;
+  const ephemeral = options?.ephemeral || true;
+  const hasFinishControl = options?.hasFinishControl || true;
+  const timeoutDuration = options?.timeoutDuration || 60_000;
+  const initialPage = options?.initialPage || 0;
+
   let elements = await getElements();
   let state: PaginatedButtonsState = 'active';
-  let page = 0;
+  let page = clampPage(initialPage, elements);
   let content = await getContent(state);
-  const response = await interaction.reply({
-    content,
-    // Doesn't make sense for multiple users to interact with a paginated interface, so always ephemeral
-    ephemeral: true,
-    components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
-  });
+  let response;
+  if (wasDeferred) {
+    response = await interaction.editReply({
+      content: content ?? undefined,
+      components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
+    });
+  } else {
+    response = await interaction.reply({
+      content: content ?? undefined,
+      ephemeral,
+      components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
+    });
+  }
   while (state === 'active') {
     try {
       const action = await response.awaitMessageComponent({time: timeoutDuration});
@@ -104,10 +129,10 @@ export async function executePaginatedButtons<Type>(
       if (namespace === PaginatedButtonNamespace) {
         switch (command) {
           case 'previous':
-            page = Math.max(page - 1, 0);
+            page = clampPage(page - 1, elements);
             break;
           case 'next':
-            page = Math.min(page + 1, getTotalPageCount(elements) - 1);
+            page = clampPage(page + 1, elements);
             break;
           case 'finish':
             state = 'finished';
@@ -117,15 +142,15 @@ export async function executePaginatedButtons<Type>(
         }
       } else {
         // Defer to handler to update state elsewhere
-        await handleButton(action.customId);
+        await handleButton?.(action.customId);
       }
       // Get fresh local state
       elements = await getElements();
       content = await getContent(state);
       // Update page if it's out of bounds due to element count changing
-      page = Math.min(Math.max(page, 0), getTotalPageCount(elements) - 1);
+      page = clampPage(page, elements);
       await action.update({
-        content,
+        content: content ?? undefined,
         components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
       });
     } catch (err) {
@@ -139,9 +164,9 @@ export async function executePaginatedButtons<Type>(
       }
       elements = await getElements();
       // Update page if it's out of bounds due to element count changing
-      page = Math.min(Math.max(page, 0), getTotalPageCount(elements) - 1);
+      page = clampPage(page, elements);
       await interaction.editReply({
-        content,
+        content: content ?? undefined,
         components: getPaginatedButtons(elements, page, false, elementButtonBuilder, hasFinishControl)
       });
     }

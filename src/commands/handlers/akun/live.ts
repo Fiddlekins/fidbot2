@@ -1,29 +1,53 @@
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
-import {clipArray, discordLimits} from "../../../discordLimits";
+import {ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
+import {executePaginatedButtons, PaginatedButtonsState} from "../../../paginatedButtons";
 import {getGuildSettings} from "../../../settings";
-import {to2DArray} from "../../../utils/to2DArray";
 import {getLive} from "./api/getLive";
+import {PartialStoryNode} from "./api/types";
 import {getCleanTitle} from "./utils/getCleanTitle";
 import {getStoryUrl} from "./utils/getStoryUrl";
+
+function partialStoryNodeButtonBuilder(partialStoryNode: PartialStoryNode) {
+  return new ButtonBuilder()
+    .setLabel(getCleanTitle(partialStoryNode.title))
+    .setStyle(ButtonStyle.Link)
+    .setURL(getStoryUrl(partialStoryNode.id, partialStoryNode.title));
+}
 
 export async function executeLive(interaction: ChatInputCommandInteraction) {
   const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).akun : false;
   await interaction.deferReply({ephemeral});
-  const stories = await getLive();
-  if (stories.length) {
-    const rows = clipArray(to2DArray(stories, discordLimits.component.elementCount), discordLimits.component.rowCount)
-      .map((rowStories) => {
-        return new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(...rowStories.map((liveStoryMeta) => {
-            return new ButtonBuilder()
-              .setLabel(getCleanTitle(liveStoryMeta.title))
-              .setStyle(ButtonStyle.Link)
-              .setURL(getStoryUrl(liveStoryMeta.id, liveStoryMeta.title));
-          }));
-      });
-    await interaction.editReply({
-      components: rows,
+  const stories = (await getLive())
+    .sort((a, b) => {
+      return a.title > b.title ? 1 : -1;
     });
+  if (stories.length) {
+    const initialPage = interaction.options.getInteger('page');
+    await executePaginatedButtons<PartialStoryNode>(
+      interaction,
+      async () => {
+        return stories;
+      },
+      async (state: PaginatedButtonsState, error?: unknown) => {
+        switch (state) {
+          case "active":
+            return null;
+          case "finished":
+            return null;
+          case "timedout":
+            return null;
+          case "error":
+            return 'Something went wrong...';
+          default:
+            return 'Something went wrong...';
+        }
+      },
+      partialStoryNodeButtonBuilder,
+      {
+        wasDeferred: true,
+        ephemeral,
+        initialPage: initialPage ? initialPage - 1 : 0,
+      },
+    );
   } else {
     await interaction.editReply(`It's as silent as the grave...`);
   }

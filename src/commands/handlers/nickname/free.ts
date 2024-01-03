@@ -58,19 +58,20 @@ export async function executeFree(interaction: ChatInputCommandInteraction) {
           }
         },
         targetButtonBuilder,
-        async (customId: string) => {
-          if (interaction.guildId) {
-            // Update value in case it has been changed by some other async process
-            const existingGuildTargets = lockedUserCache.get(interaction.guildId) || {};
-            const validKeys = Object.keys(existingGuildTargets);
-            if (validKeys.includes(customId)) {
-              const newGuildTargets = {...existingGuildTargets};
-              delete newGuildTargets[customId];
-              lockedUserCache.set(interaction.guildId, newGuildTargets);
+        {
+          handleButton: async (customId: string) => {
+            if (interaction.guildId) {
+              // Update value in case it has been changed by some other async process
+              const existingGuildTargets = lockedUserCache.get(interaction.guildId) || {};
+              const validKeys = Object.keys(existingGuildTargets);
+              if (validKeys.includes(customId)) {
+                const newGuildTargets = {...existingGuildTargets};
+                delete newGuildTargets[customId];
+                lockedUserCache.set(interaction.guildId, newGuildTargets);
+              }
             }
-          }
-        },
-        true,
+          },
+        }
       );
     } else {
       await interaction.reply({content: 'This feature is disabled', ephemeral: true});

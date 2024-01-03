@@ -1,0 +1,53 @@
+import {ChatInputCommandInteraction, userMention} from "discord.js";
+import {config} from "../../../config";
+import {getGuildSettings} from "../../../settings";
+import {lockedUserCache} from "./config";
+
+export async function executeLock(interaction: ChatInputCommandInteraction) {
+  if (interaction.guildId && interaction.guild) {
+    const enabled = getGuildSettings(interaction.guildId).nickname;
+    if (enabled) {
+      const user = interaction.options.getUser('user');
+      let lockedName = interaction.options.getString('locked-name');
+      if (user) {
+        const guildMember = await interaction.guild.members.fetch(user.id);
+        lockedName = lockedName || guildMember.nickname;
+        if (lockedName) {
+          let couldSetNickname = false;
+          try {
+            await guildMember.setNickname(lockedName, `Changed from ${guildMember.nickname} to ${lockedName}. Why? Ask yourself that question`);
+            couldSetNickname = true;
+          } catch (err) {
+            console.error(err);
+            // Swallow error
+          }
+          if (couldSetNickname) {
+            const existingGuildTargets = lockedUserCache.get(interaction.guildId) || {};
+            lockedUserCache.set(interaction.guildId, {
+              ...existingGuildTargets,
+              [user.id]: lockedName,
+            });
+            await interaction.reply({
+              content: `Locked ${userMention(user.id)} with nickname "${lockedName}"`,
+              ephemeral: true
+            });
+          } else {
+            await interaction.reply({
+              content: `${config.botName} lacks the permissions necessary to change that user's nickname (are they an admin..? Or perhaps the bot needs a role created/hoisted...)`,
+              ephemeral: true
+            });
+          }
+        } else {
+          await interaction.reply({
+            content: 'Lock failed as no locked name was provided and the target user has no existing nickname',
+            ephemeral: true
+          });
+        }
+      }
+    } else {
+      await interaction.reply({content: 'This feature is disabled', ephemeral: true});
+    }
+  } else {
+    await interaction.reply({content: 'This feature is not available here', ephemeral: true});
+  }
+}

@@ -5,6 +5,7 @@ export interface GuildSettings {
   akun: boolean;
   call: boolean;
   choice: boolean;
+  nickname: boolean;
   roll: boolean;
   wide: boolean;
   '8ball': boolean;
@@ -22,6 +23,7 @@ export const defaultGuildSettings: GuildSettings = {
   akun: true,
   call: true,
   choice: true,
+  nickname: false,
   roll: true,
   wide: false,
   '8ball': true,

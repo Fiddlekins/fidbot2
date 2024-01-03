@@ -13,8 +13,13 @@ const client = new Client({
   ]
 });
 
-client.once(Events.ClientReady, readyClient => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+  try {
+    await Promise.all(features.map((feature) => feature.init?.(readyClient).catch(console.error)));
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -79,6 +84,14 @@ client.on(Events.MessageCreate, async (message) => {
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
   try {
     await Promise.all(features.map((feature) => feature.messageUpdate?.(oldMessage, newMessage).catch(console.error)));
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+  try {
+    await Promise.all(features.map((feature) => feature.guildMemberUpdate?.(oldMember, newMember).catch(console.error)));
   } catch (error) {
     console.error(error);
   }

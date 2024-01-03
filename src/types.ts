@@ -1,11 +1,10 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  Client,
   ClientEvents,
   Events,
-  Message,
   ModalSubmitInteraction,
-  Partialize,
   SlashCommandBuilder,
   SlashCommandSubcommandsOnlyBuilder
 } from "discord.js";
@@ -26,17 +25,20 @@ export interface Command extends CommandHandlers {
   data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">,
 }
 
+export type InitHandler = (client: Client<true>) => Promise<void>;
+
+export type GuildMemberUpdateHandler = (...args: ClientEvents[Events.GuildMemberUpdate]) => Promise<void>;
+
 export type MessageCreateHandler = (...args: ClientEvents[Events.MessageCreate]) => Promise<void>;
 
-export type MessageUpdateHandler = (
-  oldMessage: Message | Partialize<Message<boolean>, "type" | "tts" | "pinned" | "system", "author" | "content" | "cleanContent", "">,
-  newMessage: Message | Partialize<Message<boolean>, "type" | "tts" | "pinned" | "system", "author" | "content" | "cleanContent", "">,
-) => Promise<void>;
+export type MessageUpdateHandler = (...args: ClientEvents[Events.MessageUpdate]) => Promise<void>;
 
 export interface Feature {
   data: {
     name: string;
   };
+  init?: InitHandler;
+  guildMemberUpdate?: GuildMemberUpdateHandler;
   messageCreate?: MessageCreateHandler;
   messageUpdate?: MessageUpdateHandler;
 }

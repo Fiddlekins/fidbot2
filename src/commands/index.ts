@@ -4,6 +4,7 @@ import {akunData} from "./data/akun";
 import {callData} from "./data/call";
 import {choiceData} from "./data/choice";
 import {magic8ballData} from "./data/magic8ball";
+import {nicknameData} from "./data/nickname";
 import {rollData} from "./data/roll";
 import {settingsData} from "./data/settings";
 import {wideData} from "./data/wide";
@@ -11,27 +12,23 @@ import {akunHandlers} from "./handlers/akun/akun";
 import {callHandlers} from "./handlers/call";
 import {choiceHandlers} from "./handlers/choice";
 import {magic8ballHandlers} from "./handlers/magic8ball";
+import {nicknameHandlers} from "./handlers/nickname/nickname";
 import {rollHandlers} from "./handlers/roll";
 import {settingsHandlers} from "./handlers/settings";
 import {wideHandlers} from "./handlers/wide";
 
-const akun: Command = {data: akunData, ...akunHandlers};
-const call: Command = {data: callData, ...callHandlers};
-const choice: Command = {data: choiceData, ...choiceHandlers};
-const magic8ball: Command = {data: magic8ballData, ...magic8ballHandlers};
-const roll: Command = {data: rollData, ...rollHandlers};
-const settings: Command = {data: settingsData, ...settingsHandlers};
-const wide: Command = {data: wideData, ...wideHandlers};
+const commandMap: Record<string, Command> = {
+  [akunData.name]: {data: akunData, ...akunHandlers},
+  [callData.name]: {data: callData, ...callHandlers},
+  [choiceData.name]: {data: choiceData, ...choiceHandlers},
+  [magic8ballData.name]: {data: magic8ballData, ...magic8ballHandlers},
+  [nicknameData.name]: {data: nicknameData, ...nicknameHandlers},
+  [rollData.name]: {data: rollData, ...rollHandlers},
+  [settingsData.name]: {data: settingsData, ...settingsHandlers},
+  [wideData.name]: {data: wideData, ...wideHandlers},
+};
 
 export const commands = new Collection<string, Command>();
-[
-  akun,
-  call,
-  choice,
-  magic8ball,
-  roll,
-  settings,
-  wide
-].forEach((command) => {
+Object.values(commandMap).forEach((command) => {
   commands.set(command.data.name, command);
 });

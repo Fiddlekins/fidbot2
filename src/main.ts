@@ -1,5 +1,6 @@
 import {Client, Events, GatewayIntentBits} from 'discord.js'
 import {commands} from "./commands";
+import {checkNewStories} from "./commands/handlers/akun/config";
 import {config} from "./config";
 
 const client = new Client({intents: [GatewayIntentBits.Guilds]});
@@ -60,3 +61,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.login(config.token).catch(console.error);
+
+function initialiseIndefiniteProcesses() {
+  checkNewStories().catch(console.error);
+}
+
+initialiseIndefiniteProcesses();

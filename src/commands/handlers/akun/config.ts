@@ -32,7 +32,7 @@ export async function prepopulateStoryCache() {
   while (partialStoryNodes.length > 0);
 }
 
-async function checkNewStories() {
+export async function checkNewStories() {
   try {
     let page = 1;
     let continuePolling = true;
@@ -52,5 +52,3 @@ async function checkNewStories() {
   await setTimeout(10 * 60 * 1000);
   checkNewStories().catch(console.error);
 }
-
-checkNewStories().catch(console.error);

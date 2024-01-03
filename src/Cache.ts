@@ -10,7 +10,7 @@ export interface CacheSettings {
   saveInterval?: number;
 }
 
-const usedIds = new Set<string>();
+export const activeCaches = new Map<string, Cache<any>>();
 
 function getPersistPath(persistPath: string, id: string): string {
   return path.join(persistPath, `${id}.json`);
@@ -22,7 +22,7 @@ export class Cache<ValueType> {
 
   readonly maxSize: number;
 
-  readonly persist: boolean;
+  private persist: boolean;
 
   readonly persistPath: string;
 
@@ -33,10 +33,10 @@ export class Cache<ValueType> {
   isDirty: boolean;
 
   constructor({id, maxSize, persist, saveInterval}: CacheSettings) {
-    if (usedIds.has(id)) {
+    if (activeCaches.has(id)) {
       throw new Error(`Attempted to create new Cache with already used ID: ${id}`);
     }
-    usedIds.add(id);
+    activeCaches.set(id, this);
     this.id = id;
     this.maxSize = maxSize || 10000;
     this.persist = Boolean(persist);
@@ -62,18 +62,22 @@ export class Cache<ValueType> {
       } catch (err) {
         // C'est la vie
       }
-      this.save().catch(console.error);
+      this.checkSave().catch(console.error);
     }
   }
 
   private async save() {
+    if (this.isDirty) {
+      this.isDirty = false;
+      await fs.writeFile(this.persistPath, JSON.stringify(this.memory, null, 2), 'utf8');
+    }
+  }
+
+  async checkSave() {
     if (this.persist) {
-      if (this.isDirty) {
-        this.isDirty = false;
-        await fs.writeFile(this.persistPath, JSON.stringify(this.memory, null, 2), 'utf8');
-      }
+      await this.save();
       await setTimeout(this.saveInterval);
-      this.save().catch(console.error);
+      this.checkSave().catch(console.error);
     }
   }
 
@@ -114,5 +118,10 @@ export class Cache<ValueType> {
       }
       this.isDirty = true;
     }
+  }
+
+  async finish() {
+    this.save();
+    this.persist = false;
   }
 }

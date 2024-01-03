@@ -1,17 +1,10 @@
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
 import {clipArray, discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
+import {to2DArray} from "../../../utils/to2DArray";
 import {getLive} from "./api/getLive";
 import {getCleanTitle} from "./utils/getCleanTitle";
 import {getStoryUrl} from "./utils/getStoryUrl";
-
-function to2DArray<Type>(array: Type[], subArrayLength: number): Type[][] {
-  const output: Type[][] = [];
-  for (let i = 0; i < array.length; i += subArrayLength) {
-    output.push(array.slice(i, i + subArrayLength));
-  }
-  return output;
-}
 
 export async function executeLive(interaction: ChatInputCommandInteraction) {
   const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).akun : false;

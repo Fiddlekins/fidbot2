@@ -12,6 +12,7 @@ export interface GuildSettings {
   // private commands
 
   // misc features
+  awooPolicing: boolean;
   twitterEmbed: boolean;
 
   [key: string]: boolean;
@@ -24,6 +25,7 @@ export const defaultGuildSettings: GuildSettings = {
   roll: true,
   wide: false,
   '8ball': true,
+  awooPolicing: false,
   twitterEmbed: false,
 };
 

@@ -26,6 +26,7 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
   )
   const thirdRow = new ActionRowBuilder<ButtonBuilder>();
   thirdRow.addComponents(
+    getSettingToggleButton('awooPolicing', 'Awoo Policing', guildSettings.awooPolicing, active),
     getSettingToggleButton('twitterEmbed', 'Twitter Embeds', guildSettings.twitterEmbed, active),
   )
   if (active) {

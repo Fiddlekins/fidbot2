@@ -4,6 +4,7 @@ export interface GuildSettings {
   // slash commands
   akun: boolean;
   call: boolean;
+  choice: boolean;
   '8ball': boolean;
 
   // private commands
@@ -17,6 +18,7 @@ export interface GuildSettings {
 export const defaultGuildSettings: GuildSettings = {
   akun: true,
   call: true,
+  choice: true,
   '8ball': true,
   twitterEmbed: false,
 };

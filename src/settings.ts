@@ -5,6 +5,7 @@ export interface GuildSettings {
   akun: boolean;
   call: boolean;
   choice: boolean;
+  roll: boolean;
   '8ball': boolean;
 
   // private commands
@@ -19,6 +20,7 @@ export const defaultGuildSettings: GuildSettings = {
   akun: true,
   call: true,
   choice: true,
+  roll: true,
   '8ball': true,
   twitterEmbed: false,
 };

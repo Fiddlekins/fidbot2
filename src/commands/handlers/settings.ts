@@ -17,6 +17,7 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
     getSettingToggleButton('akun', 'akun', guildSettings.akun, active),
     getSettingToggleButton('call', 'call', guildSettings.call, active),
     getSettingToggleButton('choice', 'choice', guildSettings.choice, active),
+    getSettingToggleButton('roll', 'roll', guildSettings.roll, active),
     getSettingToggleButton('8ball', '8ball', guildSettings["8ball"], active),
   )
   const secondRow = new ActionRowBuilder<ButtonBuilder>();

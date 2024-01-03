@@ -18,10 +18,14 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
     getSettingToggleButton('call', 'call', guildSettings.call, active),
     getSettingToggleButton('choice', 'choice', guildSettings.choice, active),
     getSettingToggleButton('roll', 'roll', guildSettings.roll, active),
-    getSettingToggleButton('8ball', '8ball', guildSettings["8ball"], active),
+    getSettingToggleButton('wide', 'wide', guildSettings.wide, active),
   )
   const secondRow = new ActionRowBuilder<ButtonBuilder>();
   secondRow.addComponents(
+    getSettingToggleButton('8ball', '8ball', guildSettings["8ball"], active),
+  )
+  const thirdRow = new ActionRowBuilder<ButtonBuilder>();
+  thirdRow.addComponents(
     getSettingToggleButton('twitterEmbed', 'Twitter Embeds', guildSettings.twitterEmbed, active),
   )
   if (active) {
@@ -31,9 +35,9 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
       .setLabel('Finalise')
       .setStyle(ButtonStyle.Primary)
     );
-    return [firstRow, secondRow, lastRow];
+    return [firstRow, secondRow, thirdRow, lastRow];
   }
-  return [firstRow, secondRow];
+  return [firstRow, secondRow, thirdRow];
 }
 
 const settingsMessage = 'Toggle the available commands using the following buttons. Commands are enabled when their displayed symbol is ✅.\nDisabled commands are not removed from the slash command list, but when executed they only display for the user that executed them.';

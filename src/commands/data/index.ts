@@ -6,6 +6,7 @@ import {choiceData} from "./choice";
 import {magic8ballData} from "./magic8ball";
 import {rollData} from "./roll";
 import {settingsData} from "./settings";
+import {wideData} from "./wide";
 
 export const commandData = new Collection<string, Command['data']>();
 [
@@ -15,6 +16,7 @@ export const commandData = new Collection<string, Command['data']>();
   magic8ballData,
   rollData,
   settingsData,
+  wideData,
 ].forEach((data) => {
   commandData.set(data.name, data);
 });

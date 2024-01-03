@@ -19,12 +19,12 @@ export const storyNameToIdCache = new Cache<string>({
   saveInterval: 10000,
 });
 
-async function prepopulateStoryCache() {
+export async function prepopulateStoryCache() {
   let page = 1;
   let partialStoryNodes;
   do {
-    console.log(`Warming akun story cache. Completed page ${page}, total retrieved stories ${storyNameToIdCache.size}`);
     partialStoryNodes = await getStories(page);
+    console.log(`Warming akun story cache. Completed page ${page}, total retrieved stories ${storyNameToIdCache.size}`);
     // Limit rate a bit to avoid any mishap
     await setTimeout(1000);
     page++;
@@ -32,4 +32,25 @@ async function prepopulateStoryCache() {
   while (partialStoryNodes.length > 0);
 }
 
-prepopulateStoryCache().catch(console.error);
+async function checkNewStories() {
+  try {
+    let page = 1;
+    let continuePolling = true;
+    while (continuePolling) {
+      const priorSize = storyNameToIdCache.size;
+      await getStories(page);
+      continuePolling = storyNameToIdCache.size === priorSize;
+      // Limit rate a bit to avoid any mishap
+      await setTimeout(1000);
+      page++;
+    }
+  } catch (err) {
+    // Errors do not prevent the next check
+    console.error(err);
+  }
+  // Wait 10 mins before checking again
+  await setTimeout(10 * 60 * 1000);
+  checkNewStories().catch(console.error);
+}
+
+checkNewStories().catch(console.error);

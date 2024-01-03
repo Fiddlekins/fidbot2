@@ -33,7 +33,6 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
 const settingsMessage = 'Toggle the available commands using the following buttons. Commands are enabled when their displayed symbol is ✅.\nDisabled commands are not removed from the slash command list, but when executed they only display for the user that executed them.';
 
 async function execute(interaction: ChatInputCommandInteraction) {
-  console.log(interaction);
   if (interaction.guildId) {
     const guildSettings = getGuildSettings(interaction.guildId);
     const response = await interaction.reply({

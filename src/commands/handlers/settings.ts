@@ -1,20 +1,6 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ChatInputCommandInteraction,
-  PermissionFlagsBits,
-  SlashCommandBuilder
-} from "discord.js";
-import {config} from "../config";
-import {defaultGuildSettings, getGuildSettings, GuildSettings, toggleSetting} from "../settings";
-import {Command} from "./types";
-
-const data = new SlashCommandBuilder()
-  .setName('settings')
-  .setDescription(`Tailor ${config.botName} to be the perfect subordinate`)
-  .setDMPermission(false)
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator | PermissionFlagsBits.ManageGuild);
+import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
+import {defaultGuildSettings, getGuildSettings, GuildSettings, toggleSetting} from "../../settings";
+import {CommandHandlers} from "../types";
 
 function getSettingToggleButton(name: string, enabled: boolean, active: boolean) {
   return new ButtonBuilder()
@@ -47,8 +33,9 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
 const settingsMessage = 'Toggle the available commands using the following buttons. Commands are enabled when their displayed symbol is ✅.\nDisabled commands are not removed from the slash command list, but when executed they only display for the user that executed them.';
 
 async function execute(interaction: ChatInputCommandInteraction) {
-  if (interaction.guild) {
-    const guildSettings = getGuildSettings(interaction.guild.id);
+  console.log(interaction);
+  if (interaction.guildId) {
+    const guildSettings = getGuildSettings(interaction.guildId);
     const response = await interaction.reply({
       content: settingsMessage,
       ephemeral: true,
@@ -63,15 +50,15 @@ async function execute(interaction: ChatInputCommandInteraction) {
           complete = true;
           await interaction.editReply({
             content: 'Settings finalised',
-            components: getSettingComponents(getGuildSettings(interaction.guild.id), false)
+            components: getSettingComponents(getGuildSettings(interaction.guildId), false)
           });
         } else {
           const validKeys = Object.keys(defaultGuildSettings);
           if (validKeys.includes(action.customId)) {
-            toggleSetting(interaction.guild.id, action.customId);
+            toggleSetting(interaction.guildId, action.customId);
             await action.update({
               content: settingsMessage,
-              components: getSettingComponents(getGuildSettings(interaction.guild.id), true)
+              components: getSettingComponents(getGuildSettings(interaction.guildId), true)
             });
           }
         }
@@ -79,7 +66,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
         complete = true;
         await interaction.editReply({
           content: 'Settings finalised',
-          components: getSettingComponents(getGuildSettings(interaction.guild.id), false)
+          components: getSettingComponents(getGuildSettings(interaction.guildId), false)
         });
       }
     }
@@ -88,7 +75,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
   }
 }
 
-export const settings: Command = {
-  data,
+export const settingsHandlers: CommandHandlers = {
   execute,
 };

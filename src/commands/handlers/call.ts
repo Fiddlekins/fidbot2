@@ -1,23 +1,8 @@
-import {ChatInputCommandInteraction, Collection, GuildMember, SlashCommandBuilder, userMention} from "discord.js";
-import {config} from "../config";
-import {getGuildSettings} from "../settings";
-import {extractUserNamesOrTagsFromText} from "../utils/extractUserNamesOrTagsFromText";
-import {getRandomInt, getRandomIntInRange} from "../utils/random";
-import {Command} from "./types";
-
-const data = new SlashCommandBuilder()
-  .setName('call')
-  .setDescription(`Make ${config.botName} accuse <subject> of being a <descriptor>`)
-  .addStringOption(option =>
-    option.setName('subject')
-      .setDescription('The target of your affection')
-      .setRequired(true)
-  )
-  .addStringOption(option =>
-    option.setName('descriptor')
-      .setDescription('The sweet nothings you wish to convey')
-      .setRequired(true)
-  );
+import {ChatInputCommandInteraction, Collection, GuildMember, userMention} from "discord.js";
+import {getGuildSettings} from "../../settings";
+import {extractUserNamesOrTagsFromText} from "../../utils/extractUserNamesOrTagsFromText";
+import {getRandomInt, getRandomIntInRange} from "../../utils/random";
+import {CommandHandlers} from "../types";
 
 function isSubjectSelf(subject: string, interaction: ChatInputCommandInteraction): boolean {
   const subjectTransformed = subject.toLowerCase();
@@ -58,7 +43,7 @@ function getDeterminer(descriptor: string): string {
 
 
 async function execute(interaction: ChatInputCommandInteraction) {
-  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id).call : false;
+  const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).call : false;
   const subject = interaction.options.getString('subject');
   let descriptor = interaction.options.getString('descriptor');
   if (!subject || !descriptor) {
@@ -116,7 +101,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
   }
 }
 
-export const call: Command = {
-  data,
+export const callHandlers: CommandHandlers = {
   execute
 };

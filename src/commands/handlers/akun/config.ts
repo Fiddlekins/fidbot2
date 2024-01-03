@@ -1,5 +1,5 @@
 import {setTimeout} from 'node:timers/promises'
-import {Cache} from "../../Cache";
+import {Cache} from "../../../Cache";
 import {getStories} from "./api/getStories";
 
 export const HOSTNAME = 'https://fiction.live';

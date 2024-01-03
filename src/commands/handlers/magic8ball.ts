@@ -1,17 +1,8 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
-import {Cache} from "../Cache";
-import {getGuildSettings} from "../settings";
-import {getRandomElement} from "../utils/random";
-import {Command} from "./types";
-
-const data = new SlashCommandBuilder()
-  .setName('8ball')
-  .setDescription('Seek great wisdom')
-  .addStringOption(option =>
-    option.setName('question')
-      .setDescription('The query you have for Fidbot')
-      .setRequired(true)
-  );
+import {ChatInputCommandInteraction} from "discord.js";
+import {Cache} from "../../Cache";
+import {getGuildSettings} from "../../settings";
+import {getRandomElement} from "../../utils/random";
+import {CommandHandlers} from "../types";
 
 function isValidQuestion(question: string): boolean {
   // Must end with a question mark in some capacity
@@ -76,7 +67,7 @@ function getOutcome(question: string): string {
 }
 
 async function execute(interaction: ChatInputCommandInteraction) {
-  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id)["8ball"] : false;
+  const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId)["8ball"] : false;
   const question = interaction.options.getString('question');
   let reply = question ? `You asked "${question}"` : `You asked... NOTHING!`;
   if (question) {
@@ -89,7 +80,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.reply({content: reply, ephemeral});
 }
 
-export const magic8ball: Command = {
-  data,
+export const magic8ballHandlers: CommandHandlers = {
   execute
 };

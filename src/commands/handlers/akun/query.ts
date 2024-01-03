@@ -7,8 +7,8 @@ import {
   inlineCode,
   spoiler
 } from "discord.js";
-import {clipArray, clipText, discordLimits} from "../../discordLimits";
-import {getGuildSettings} from "../../settings";
+import {clipArray, clipText, discordLimits} from "../../../discordLimits";
+import {getGuildSettings} from "../../../settings";
 import {getStoryNode} from "./api/getStoryNode";
 import {StoryNode} from "./api/types";
 import {storyNameToIdCache} from "./config";
@@ -95,7 +95,7 @@ function formatDescription(storyNode: StoryNode): string {
 }
 
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
-  const ephemeral = interaction.guild ? !getGuildSettings(interaction.guild.id).akun : false;
+  const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).akun : false;
   const potentialIdOrTitle = interaction.options.getString('title');
   if (potentialIdOrTitle) {
     await interaction.deferReply({ephemeral});

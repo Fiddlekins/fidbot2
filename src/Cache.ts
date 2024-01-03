@@ -91,6 +91,10 @@ export class Cache<ValueType> {
     this.isDirty = true;
   }
 
+  delete(key: string) {
+    delete this.memory[key];
+  }
+
   keys() {
     return Object.keys(this.memory);
   }

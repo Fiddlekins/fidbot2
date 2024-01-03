@@ -1,5 +1,5 @@
 import {Collection} from "discord.js";
-import {Command} from "../types";
+import {Command} from "../../types";
 import {akunData} from "./akun";
 import {callData} from "./call";
 import {magic8ballData} from "./magic8ball";

@@ -7,7 +7,7 @@ import {akunHandlers} from "./handlers/akun/akun";
 import {callHandlers} from "./handlers/call";
 import {magic8ballHandlers} from "./handlers/magic8ball";
 import {settingsHandlers} from "./handlers/settings";
-import {Command} from "./types";
+import {Command} from "../types";
 
 const akun: Command = {data: akunData, ...akunHandlers};
 const call: Command = {data: callData, ...callHandlers};

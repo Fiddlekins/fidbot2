@@ -2,7 +2,7 @@ import {ChatInputCommandInteraction} from "discord.js";
 import {Cache} from "../../Cache";
 import {getGuildSettings} from "../../settings";
 import {getRandomElement} from "../../utils/random";
-import {CommandHandlers} from "../types";
+import {CommandHandlers} from "../../types";
 
 function isValidQuestion(question: string): boolean {
   // Must end with a question mark in some capacity

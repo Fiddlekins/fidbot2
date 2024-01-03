@@ -1,5 +1,5 @@
 import {AutocompleteInteraction, ChatInputCommandInteraction} from "discord.js";
-import {CommandHandlers} from "./../../types";
+import {CommandHandlers} from "../../../types";
 import {executeDice} from "./dice";
 import {executeLive} from "./live";
 import {autocompleteQuery, executeQuery} from "./query";

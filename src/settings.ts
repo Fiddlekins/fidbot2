@@ -1,9 +1,15 @@
 import {Cache} from "./Cache";
 
 export interface GuildSettings {
+  // slash commands
   akun: boolean;
   call: boolean;
   '8ball': boolean;
+
+  // private commands
+
+  // misc features
+  twitterEmbed: boolean;
 
   [key: string]: boolean;
 }
@@ -12,6 +18,7 @@ export const defaultGuildSettings: GuildSettings = {
   akun: true,
   call: true,
   '8ball': true,
+  twitterEmbed: false,
 };
 
 export const settingsCache = new Cache<GuildSettings>({

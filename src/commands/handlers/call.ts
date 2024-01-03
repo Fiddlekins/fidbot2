@@ -2,7 +2,7 @@ import {ChatInputCommandInteraction, Collection, GuildMember, userMention} from 
 import {getGuildSettings} from "../../settings";
 import {extractUserNamesOrTagsFromText} from "../../utils/extractUserNamesOrTagsFromText";
 import {getRandomInt, getRandomIntInRange} from "../../utils/random";
-import {CommandHandlers} from "../types";
+import {CommandHandlers} from "../../types";
 
 function isSubjectSelf(subject: string, interaction: ChatInputCommandInteraction): boolean {
   const subjectTransformed = subject.toLowerCase();

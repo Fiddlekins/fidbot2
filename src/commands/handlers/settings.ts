@@ -1,11 +1,11 @@
 import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
 import {defaultGuildSettings, getGuildSettings, GuildSettings, toggleSetting} from "../../settings";
-import {CommandHandlers} from "../types";
+import {CommandHandlers} from "../../types";
 
-function getSettingToggleButton(name: string, enabled: boolean, active: boolean) {
+function getSettingToggleButton(name: string, label: string, enabled: boolean, active: boolean) {
   return new ButtonBuilder()
     .setCustomId(name)
-    .setLabel(name)
+    .setLabel(label)
     .setStyle(ButtonStyle.Secondary)
     .setEmoji(enabled ? '✅' : '🚫')
     .setDisabled(!active)
@@ -14,9 +14,13 @@ function getSettingToggleButton(name: string, enabled: boolean, active: boolean)
 function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
   const firstRow = new ActionRowBuilder<ButtonBuilder>();
   firstRow.addComponents(
-    getSettingToggleButton('akun', guildSettings.akun, active),
-    getSettingToggleButton('call', guildSettings.call, active),
-    getSettingToggleButton('8ball', guildSettings["8ball"], active),
+    getSettingToggleButton('akun', 'akun', guildSettings.akun, active),
+    getSettingToggleButton('call', 'call', guildSettings.call, active),
+    getSettingToggleButton('8ball', '8ball', guildSettings["8ball"], active),
+  )
+  const secondRow = new ActionRowBuilder<ButtonBuilder>();
+  secondRow.addComponents(
+    getSettingToggleButton('twitterEmbed', 'Twitter Embeds', guildSettings.twitterEmbed, active),
   )
   if (active) {
     const lastRow = new ActionRowBuilder<ButtonBuilder>();
@@ -25,9 +29,9 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
       .setLabel('Finalise')
       .setStyle(ButtonStyle.Primary)
     );
-    return [firstRow, lastRow];
+    return [firstRow, secondRow, lastRow];
   }
-  return [firstRow];
+  return [firstRow, secondRow];
 }
 
 const settingsMessage = 'Toggle the available commands using the following buttons. Commands are enabled when their displayed symbol is ✅.\nDisabled commands are not removed from the slash command list, but when executed they only display for the user that executed them.';

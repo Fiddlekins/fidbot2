@@ -2,8 +2,16 @@ import {Client, Events, GatewayIntentBits} from 'discord.js'
 import {commands} from "./commands";
 import {checkNewStories} from "./commands/handlers/akun/config";
 import {config} from "./config";
+import {features} from "./features";
 
-const client = new Client({intents: [GatewayIntentBits.Guilds]});
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
 
 client.once(Events.ClientReady, readyClient => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
@@ -57,6 +65,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     } catch (error) {
       console.error(error);
     }
+  }
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    await Promise.all(features.map((feature) => feature.messageCreate?.(message).catch(console.error)));
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
+  try {
+    await Promise.all(features.map((feature) => feature.messageUpdate?.(oldMessage, newMessage).catch(console.error)));
+  } catch (error) {
+    console.error(error);
   }
 });
 

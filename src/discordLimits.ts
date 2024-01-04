@@ -28,11 +28,14 @@ const modal = {
   textInputPlaceholderLength: 100,
 }
 
+const nicknameLength = 32;
+
 export const discordLimits = {
   autocomplete,
   component,
   embed,
   modal,
+  nicknameLength,
 }
 
 export function clipText(text: string, maxLength: number): string {

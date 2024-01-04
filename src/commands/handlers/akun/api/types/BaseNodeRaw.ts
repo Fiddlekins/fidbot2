@@ -1,10 +1,11 @@
+import {UUID} from "./ids";
 import {UserRaw} from "./UserRaw";
 
 export interface BaseNodeRaw {
   /**
    * Unique ID of the node
    */
-  _id: string;
+  _id: UUID;
 
   /**
    * Timestamp of node creation
@@ -14,7 +15,7 @@ export interface BaseNodeRaw {
   /**
    * Node type
    */
-  nt: 'chat' | 'chapter' | 'choice' | 'story';
+  nt: 'chapter' | 'chat' | 'choice' | 'readerPost' | 'story';
 
   /**
    * The node owners

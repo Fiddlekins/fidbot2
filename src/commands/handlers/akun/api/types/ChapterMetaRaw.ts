@@ -1,3 +1,5 @@
+import {UUID} from "./ids";
+
 export interface ChapterMetaRaw {
   /**
    * Time of chapter node creation
@@ -7,7 +9,7 @@ export interface ChapterMetaRaw {
   /**
    * Unique ID of the chapter node
    */
-  id: string;
+  id: UUID;
 
   /**
    * The title given to the chapter

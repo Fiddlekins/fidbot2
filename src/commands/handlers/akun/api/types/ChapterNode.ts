@@ -1,35 +1,30 @@
-import {BaseNodeRaw} from "./BaseNodeRaw";
+import {BaseNode} from "./BaseNode";
 import {UUID} from "./ids";
 
-export interface ChapterNodeRaw extends BaseNodeRaw {
+export interface ChapterNode extends BaseNode {
   /**
    * The chapter node body
    * HTML formatted
    */
-  b: string;
+  body: string;
 
   /**
    * Whether only fanclub members can vote
    */
-  fanclubExclusive?: boolean;
+  fanclubExclusive: boolean;
 
   /**
    * Node type is always 'chapter'
    */
-  nt: 'chapter';
-
-  /**
-   * TODO
-   */
-  rt: number;
+  nodeType: 'chapter';
 
   /**
    * StoryNode ID
    */
-  sid: UUID;
+  storyNodeId: UUID;
 
   /**
    * Word count for this node
    */
-  w: number;
+  wordCount: number;
 }

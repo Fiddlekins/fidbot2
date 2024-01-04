@@ -1,10 +1,11 @@
+import {UUID} from "./ids";
 import {UserRaw} from "./UserRaw";
 
 export interface ReplyMetaRaw {
   /**
    * Unique ID of the chat node
    */
-  _id: string;
+  _id: UUID;
 
   /**
    * The chat node body

@@ -1,16 +1,22 @@
 import {
   AutocompleteInteraction,
+  bold,
   ChatInputCommandInteraction,
   EmbedAuthorOptions,
   EmbedBuilder,
   escapeMarkdown,
   inlineCode,
+  Message,
   spoiler,
   time
 } from "discord.js";
 import {clipArray, clipText, discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
+import {getStoryChatLatest} from "./api/getStoryChatLatest";
+import {getStoryContent} from "./api/getStoryContent";
 import {getStoryNode} from "./api/getStoryNode";
+import {ChatNode} from "./api/types/ChatNode";
+import {StoryContentNode} from "./api/types/StoryContentNode";
 import {StoryNode} from "./api/types/StoryNode";
 import {storyNameToIdCache} from "./config";
 import {getCleanBody} from "./utils/getCleanBody";
@@ -96,7 +102,16 @@ function formatDescription(storyNode: StoryNode): string {
   ].join('\n');
 }
 
-function getStoryEmbed(storyNode: StoryNode) {
+function isLastReplyAdequate(lastReplyNode: ChatNode | null): boolean {
+  return !!lastReplyNode
+    && !!lastReplyNode.body?.length
+    && lastReplyNode.body !== 'likes this story'
+    && lastReplyNode.body !== 'hypes this story'
+    && lastReplyNode.body !== 'posts an update'
+    && !/^\/(dice|roll)/i.test(lastReplyNode.body);
+}
+
+function getStoryEmbed(storyNode: StoryNode, lastStoryContentNode?: StoryContentNode, lastAdequateReply?: ChatNode) {
   let embed = new EmbedBuilder()
     .setTitle(clipText(escapeMarkdown(getCleanTitle(storyNode.title)), discordLimits.embed.titleLength))
     .setURL(getStoryUrl(storyNode.id, storyNode.title))
@@ -104,7 +119,13 @@ function getStoryEmbed(storyNode: StoryNode) {
     .addFields({name: 'Created', value: time(storyNode.timeCreated), inline: true})
     .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
     .addFields({name: 'Read time', value: getReadTime(storyNode.wordCount), inline: true})
+    .addFields({
+      name: 'Latest update',
+      value: lastStoryContentNode?.timeCreated ? time(lastStoryContentNode?.timeCreated) : '...',
+      inline: true
+    })
     .addFields({name: 'Comments', value: storyNode.commentCount.toString(), inline: true})
+    .addFields({name: 'Status', value: storyNode.isLive ? bold('LIVE ✍') : storyNode.storyStatus, inline: true})
   const [author] = storyNode.users;
   if (author) {
     const embedAuthorOptions: EmbedAuthorOptions = {
@@ -121,11 +142,12 @@ function getStoryEmbed(storyNode: StoryNode) {
     // embed = embed.setImage(coverImage)
     embed = embed.setThumbnail(coverImage)
   }
-  if (storyNode.lastReply?.nodeType === 'chat' && storyNode.lastReply.body) {
+  let lastReply = lastAdequateReply || storyNode.lastReply;
+  if (lastReply?.body && isLastReplyAdequate(lastReply)) {
     // Less tested and more optional, so wrap in try-catch
     try {
-      const [author] = storyNode.lastReply.users;
-      const [firstParagraph] = storyNode.lastReply.body.split('\n');
+      const [author] = lastReply.users;
+      const [firstParagraph] = lastReply.body.split('\n');
       // Footer limit is a lot larger than desired quote length, so clip some more
       const text = `${author?.username || 'Anon'}: "${clipText(firstParagraph, 240)}"`;
       embed = embed
@@ -133,7 +155,7 @@ function getStoryEmbed(storyNode: StoryNode) {
           text: clipText(text, discordLimits.embed.footerLength),
           iconURL: author?.avatar
         })
-        .setTimestamp(storyNode.lastReply.timeCreated);
+        .setTimestamp(lastReply.timeCreated);
     } catch (err) {
       console.error(err);
       console.error(JSON.stringify(storyNode));
@@ -142,10 +164,35 @@ function getStoryEmbed(storyNode: StoryNode) {
   return embed;
 }
 
-// async function enhanceStoryEmbed(interaction: ChatInputCommandInteraction, storyNode: StoryNode) {
-//
-//   await interaction.editReply({embeds: [getStoryEmbed(storyNode)]});
-// }
+async function enhanceStoryEmbed(
+  interaction: ChatInputCommandInteraction,
+  storyNode: StoryNode,
+  initialEmbedReply: Promise<Message>
+) {
+  let storyContentPromise;
+  if (storyNode.chapters.length) {
+    storyContentPromise = getStoryContent(storyNode.id, {
+      timeStart: storyNode.chapters[storyNode.chapters.length - 1].timeCreated.valueOf()
+    });
+  } else {
+    storyContentPromise = getStoryContent(storyNode.id);
+  }
+  let storyChatPromise;
+  if (isLastReplyAdequate(storyNode.lastReply)) {
+    storyChatPromise = Promise.resolve(null);
+  } else {
+    storyChatPromise = getStoryChatLatest(storyNode.id);
+  }
+  const [storyContentNodes, chatNodes] = await Promise.all([storyContentPromise, storyChatPromise]);
+  const latestStoryContentNode = storyContentNodes[storyContentNodes.length - 1];
+  let lastReply;
+  if (chatNodes !== null) {
+    lastReply = chatNodes.reverse().find(isLastReplyAdequate);
+  }
+  // Make sure the original embed reply finishes first
+  await initialEmbedReply;
+  await interaction.editReply({embeds: [getStoryEmbed(storyNode, latestStoryContentNode, lastReply)]});
+}
 
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
   const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).akun : false;
@@ -165,7 +212,9 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
     }
     // If we still couldn't find a storyNode then the input is either invalid or the cache is incomplete
     if (storyNode) {
-      await interaction.editReply({embeds: [getStoryEmbed(storyNode)]});
+      const initialEmbedReply = interaction.editReply({embeds: [getStoryEmbed(storyNode)]});
+      enhanceStoryEmbed(interaction, storyNode, initialEmbedReply).catch(console.error);
+      await initialEmbedReply;
     } else {
       await interaction.editReply('Failed to find the quest');
     }

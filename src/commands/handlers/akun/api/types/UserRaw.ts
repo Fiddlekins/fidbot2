@@ -1,9 +1,11 @@
+import {UUID} from "./ids";
+
 export interface UserRaw {
   /**
    * Unique ID of the user
    * Absent if the user is anon
    */
-  _id?: string;
+  _id?: UUID;
 
   /**
    * Avatar image URL

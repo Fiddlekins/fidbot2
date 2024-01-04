@@ -3,7 +3,10 @@ import {ChatNodeRaw} from "../types/ChatNodeRaw";
 import {processReplyMeta} from "./processReplyMeta";
 import {processUsers} from "./processUsers";
 
-export function processChatNode(chatNodeRaw: ChatNodeRaw): ChatNode {
+export function processChatNode(chatNodeRaw: ChatNodeRaw): ChatNode | null {
+  if (chatNodeRaw.nt !== 'chat') {
+    return null;
+  }
   return {
     id: chatNodeRaw._id,
     timeCreated: new Date(chatNodeRaw.ct),

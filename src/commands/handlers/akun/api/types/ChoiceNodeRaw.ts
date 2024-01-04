@@ -1,37 +1,102 @@
 import {BaseNodeRaw} from "./BaseNodeRaw";
-import {ReplyMetaRaw} from "./ReplyMetaRaw";
+import {ChatNodeRaw} from "./ChatNodeRaw";
+import {ChoiceId, UserSessionId, UUID,} from "./ids";
 
 export interface ChoiceNodeRaw extends BaseNodeRaw {
   /**
-   * The chat node body
-   * Missing if the chat node was an image post
+   * The timestamp that the vote is configured to automatically close at
+   */
+  autoClose?: string;
+
+  /**
+   * Poll description
    */
   b?: string;
 
   /**
-   * The image URL
-   * Missing if the chat node was a text post
+   * The number of chat replies each choice has received
    */
-  i?: string;
+  choiceReplies?: Record<ChoiceId, { count: number }>;
 
   /**
-   * Node type is always 'chat'
+   * List of choice descriptions
    */
-  nt: 'chat';
+  choices: string[];
 
   /**
-   * IDs of nodes this chat node is a "reply" to
-   * In stories this includes the story node ID, and potentially a chat node ID if it was a direct reply
+   * Undefined if the choice is open
    */
-  r: string[];
+  closed?: 'closed';
 
   /**
-   * Data about the chat node being replied to
+   * Whether users can submit custom choices
    */
-  ra?: ReplyMetaRaw;
+  custom?: boolean;
 
   /**
-   * Time reply was created
+   * Whether only fanclub members can vote
+   */
+  fanclubExclusive?: boolean;
+
+  /**
+   * Last reply node
+   */
+  lr?: ChatNodeRaw;
+
+  /**
+   * Whether users can vote for multiple choices
+   */
+  multiple?: boolean;
+
+  /**
+   * Node type is always 'choice'
+   */
+  nt: 'choice';
+
+  /**
+   * TODO
+   */
+  NUT?: number;
+
+  /**
+   * TODO
+   */
+  o: string;
+
+  /**
+   * TODO
+   */
+  p: number;
+
+  /**
+   * TODO
    */
   rt: number;
+
+  /**
+   * StoryNode ID
+   */
+  sid: UUID;
+
+  /**
+   * Maps session ID at time of voting to userId
+   */
+  uidUser: Record<UserSessionId, UUID>;
+
+  /**
+   * Maps userId to votes cast
+   * Only includes votes from non-anon users
+   */
+  userVotes: Record<UUID, ChoiceId[]>;
+
+  /**
+   * Maps session ID to votes cast
+   * Includes all votes
+   */
+  votes: Record<UserSessionId, ChoiceId[]>;
+
+  /**
+   * TODO
+   */
+  w: number;
 }

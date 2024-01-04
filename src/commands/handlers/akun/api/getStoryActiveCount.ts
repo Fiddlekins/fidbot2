@@ -1,6 +1,6 @@
 import {post} from "./post";
 import {tryParseJson} from "./tryParseJson";
-import {ActivesCountResponse} from "./typesRaw";
+import {ActivesCountResponse} from "./types/responses";
 
 // TODO
 // This currently fails with a cloudflare timeout for unclear reasons

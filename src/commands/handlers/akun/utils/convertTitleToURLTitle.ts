@@ -3,5 +3,5 @@ export function convertTitleToURLTitle(title: string): string {
     .replaceAll(/<.*?>/g, '')
     .replaceAll(/\s/g, '_')
     .replaceAll(/['"]/g, '')
-    .replaceAll(/[\\/]/g, '-');
+    .replaceAll(/[\\/?]/g, '-');
 }

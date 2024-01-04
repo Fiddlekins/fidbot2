@@ -2,8 +2,8 @@ import {storyNameToIdCache} from "../config";
 import {get} from "./get";
 import {processPartialStoryNode} from "./processors/processPartialStoryNode";
 import {tryParseJson} from "./tryParseJson";
-import {PartialStoryNode} from "./types";
-import {LiveResponse} from "./typesRaw";
+import {PartialStoryNode} from "./types/PartialStoryNode";
+import {LiveResponse} from "./types/responses";
 
 export async function getLive(): Promise<PartialStoryNode[]> {
   const response = await get('api/anonkun/board/live');

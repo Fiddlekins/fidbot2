@@ -1,5 +1,5 @@
-import {ChatNode} from "../types";
-import {ChatNodeRaw} from "../typesRaw";
+import {ChatNode} from "../types/ChatNode";
+import {ChatNodeRaw} from "../types/ChatNodeRaw";
 import {processReplyMeta} from "./processReplyMeta";
 import {processUsers} from "./processUsers";
 

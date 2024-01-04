@@ -1,6 +1,6 @@
 import {imageURLParser} from "../../utils/imageURLParser";
-import {User} from "../types";
-import {UserRaw} from "../typesRaw";
+import {User} from "../types/User";
+import {UserRaw} from "../types/UserRaw";
 
 export function processUser(userRaw: UserRaw): User {
   const user: User = {

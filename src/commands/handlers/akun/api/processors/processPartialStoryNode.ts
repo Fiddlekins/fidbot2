@@ -1,6 +1,6 @@
 import {imageURLParser} from "../../utils/imageURLParser";
-import {PartialStoryNode} from "../types";
-import {PartialStoryNodeRaw} from "../typesRaw";
+import {PartialStoryNode} from "../types/PartialStoryNode";
+import {PartialStoryNodeRaw} from "../types/PartialStoryNodeRaw";
 import {processUsers} from "./processUsers";
 
 export function processPartialStoryNode(partialStoryNodeRaw: PartialStoryNodeRaw): PartialStoryNode {

@@ -2,7 +2,7 @@ import {ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.j
 import {executePaginatedButtons, PaginatedButtonsState} from "../../../paginatedButtons";
 import {getGuildSettings} from "../../../settings";
 import {getLive} from "./api/getLive";
-import {PartialStoryNode} from "./api/types";
+import {PartialStoryNode} from "./api/types/PartialStoryNode";
 import {getCleanTitle} from "./utils/getCleanTitle";
 import {getStoryUrl} from "./utils/getStoryUrl";
 

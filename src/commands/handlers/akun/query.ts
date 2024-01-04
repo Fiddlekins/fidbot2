@@ -5,12 +5,13 @@ import {
   EmbedBuilder,
   escapeMarkdown,
   inlineCode,
-  spoiler
+  spoiler,
+  time
 } from "discord.js";
 import {clipArray, clipText, discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
 import {getStoryNode} from "./api/getStoryNode";
-import {StoryNode} from "./api/types";
+import {StoryNode} from "./api/types/StoryNode";
 import {storyNameToIdCache} from "./config";
 import {getCleanBody} from "./utils/getCleanBody";
 import {getCleanTitle} from "./utils/getCleanTitle";
@@ -95,6 +96,57 @@ function formatDescription(storyNode: StoryNode): string {
   ].join('\n');
 }
 
+function getStoryEmbed(storyNode: StoryNode) {
+  let embed = new EmbedBuilder()
+    .setTitle(clipText(escapeMarkdown(getCleanTitle(storyNode.title)), discordLimits.embed.titleLength))
+    .setURL(getStoryUrl(storyNode.id, storyNode.title))
+    .setDescription(clipText(formatDescription(storyNode), discordLimits.embed.descriptionLength))
+    .addFields({name: 'Created', value: time(storyNode.timeCreated), inline: true})
+    .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
+    .addFields({name: 'Read time', value: getReadTime(storyNode.wordCount), inline: true})
+    .addFields({name: 'Comments', value: storyNode.commentCount.toString(), inline: true})
+  const [author] = storyNode.users;
+  if (author) {
+    const embedAuthorOptions: EmbedAuthorOptions = {
+      name: clipText(author.username, discordLimits.embed.authorNameLength),
+      url: getUserProfileUrl(author.username)
+    };
+    if (author.avatar) {
+      embedAuthorOptions.iconURL = author.avatar;
+    }
+    embed = embed.setAuthor(embedAuthorOptions);
+  }
+  const [coverImage] = storyNode.coverImages;
+  if (coverImage) {
+    // embed = embed.setImage(coverImage)
+    embed = embed.setThumbnail(coverImage)
+  }
+  if (storyNode.lastReply?.nodeType === 'chat' && storyNode.lastReply.body) {
+    // Less tested and more optional, so wrap in try-catch
+    try {
+      const [author] = storyNode.lastReply.users;
+      const [firstParagraph] = storyNode.lastReply.body.split('\n');
+      // Footer limit is a lot larger than desired quote length, so clip some more
+      const text = `${author?.username || 'Anon'}: "${clipText(firstParagraph, 240)}"`;
+      embed = embed
+        .setFooter({
+          text: clipText(text, discordLimits.embed.footerLength),
+          iconURL: author?.avatar
+        })
+        .setTimestamp(storyNode.lastReply.timeCreated);
+    } catch (err) {
+      console.error(err);
+      console.error(JSON.stringify(storyNode));
+    }
+  }
+  return embed;
+}
+
+// async function enhanceStoryEmbed(interaction: ChatInputCommandInteraction, storyNode: StoryNode) {
+//
+//   await interaction.editReply({embeds: [getStoryEmbed(storyNode)]});
+// }
+
 export async function executeQuery(interaction: ChatInputCommandInteraction) {
   const ephemeral = interaction.guildId ? !getGuildSettings(interaction.guildId).akun : false;
   const potentialIdOrTitle = interaction.options.getString('title');
@@ -113,46 +165,7 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
     }
     // If we still couldn't find a storyNode then the input is either invalid or the cache is incomplete
     if (storyNode) {
-      let embed = new EmbedBuilder()
-        .setTitle(clipText(escapeMarkdown(getCleanTitle( storyNode.title)), discordLimits.embed.titleLength))
-        .setURL(getStoryUrl(storyNode.id, storyNode.title))
-        .setDescription(clipText(formatDescription(storyNode), discordLimits.embed.descriptionLength))
-        .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
-        .addFields({name: 'Read time', value: getReadTime(storyNode.wordCount), inline: true})
-        .addFields({name: 'Comments', value: storyNode.commentCount.toString(), inline: true})
-      const [author] = storyNode.users;
-      if (author) {
-        const embedAuthorOptions: EmbedAuthorOptions = {
-          name: clipText(author.username, discordLimits.embed.authorNameLength),
-          url: getUserProfileUrl(author.username)
-        };
-        if (author.avatar) {
-          embedAuthorOptions.iconURL = author.avatar;
-        }
-        embed = embed.setAuthor(embedAuthorOptions);
-      }
-      const [coverImage] = storyNode.coverImages;
-      if (coverImage) {
-        // embed = embed.setImage(coverImage)
-        embed = embed.setThumbnail(coverImage)
-      }
-      if (storyNode.lastReply?.nodeType === 'chat' && storyNode.lastReply.body) {
-        // Less tested and more optional, so wrap in try-catch
-        try {
-          const [author] = storyNode.lastReply.users;
-          const [firstParagraph] = storyNode.lastReply.body.split('\n');
-          // Footer limit is a lot larger than desired quote length, so clip some more
-          const text = `${author?.username || 'Anon'}: "${clipText(firstParagraph, 240)}"`;
-          embed = embed.setFooter({
-            text: clipText(text, discordLimits.embed.footerLength),
-            iconURL: author?.avatar
-          });
-        } catch (err) {
-          console.error(err);
-          console.error(JSON.stringify(storyNode));
-        }
-      }
-      await interaction.editReply({embeds: [embed]});
+      await interaction.editReply({embeds: [getStoryEmbed(storyNode)]});
     } else {
       await interaction.editReply('Failed to find the quest');
     }

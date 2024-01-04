@@ -1,5 +1,5 @@
-import {User} from "../types";
-import {UserRaw} from "../typesRaw";
+import {User} from "../types/User";
+import {UserRaw} from "../types/UserRaw";
 import {processUser} from "./processUser";
 
 export function processUsers(usersRaw: string | UserRaw[] | undefined): User[] {

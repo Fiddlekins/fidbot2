@@ -1,5 +1,5 @@
-import {ChapterMeta} from "../types";
-import {ChapterMetaRaw} from "../typesRaw";
+import {ChapterMeta} from "../types/ChapterMeta";
+import {ChapterMetaRaw} from "../types/ChapterMetaRaw";
 
 export function processChapterMeta(chapterMetaRaw: ChapterMetaRaw): ChapterMeta {
   return {

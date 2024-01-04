@@ -3,8 +3,8 @@ import {storyNameToIdCache} from "../config";
 import {get} from "./get";
 import {processPartialStoryNode} from "./processors/processPartialStoryNode";
 import {tryParseJson} from "./tryParseJson";
-import {PartialStoryNode} from "./types";
-import {StoriesResponse} from "./typesRaw";
+import {PartialStoryNode} from "./types/PartialStoryNode";
+import {StoriesResponse} from "./types/responses";
 
 export async function getStories(page: number): Promise<PartialStoryNode[]> {
   const queryParams = {

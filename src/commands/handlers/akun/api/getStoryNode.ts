@@ -2,8 +2,8 @@ import {storyNameToIdCache} from "../config";
 import {get} from "./get";
 import {processStoryNode} from "./processors/processStoryNode";
 import {tryParseJson} from "./tryParseJson";
-import {StoryNode} from "./types";
-import {StoryNodeRaw} from "./typesRaw";
+import {StoryNode} from "./types/StoryNode";
+import {StoryNodeRaw} from "./types/StoryNodeRaw";
 
 export async function getStoryNode(id: string): Promise<StoryNode | null> {
   const response = await get(`api/node/${id}`);

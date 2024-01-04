@@ -15,7 +15,7 @@ export async function executeLock(interaction: ChatInputCommandInteraction) {
         if (lockedName) {
           let couldSetNickname = false;
           try {
-            await guildMember.setNickname(lockedName, `Changed from ${guildMember.nickname} to ${lockedName}. Why? Ask yourself that question`);
+            await guildMember.setNickname(lockedName, `Changed from ${guildMember.nickname || guildMember.displayName} to ${lockedName}. Why? Ask yourself that question`);
             couldSetNickname = true;
           } catch (err) {
             console.error(err);

@@ -107,6 +107,7 @@ function isLastReplyAdequate(lastReplyNode: ChatNode | null): boolean {
     && !!lastReplyNode.body?.length
     && lastReplyNode.body !== 'likes this story'
     && lastReplyNode.body !== 'hypes this story'
+    && lastReplyNode.body !== 'reviewed this story'
     && lastReplyNode.body !== 'posts an update'
     && !/^\/(dice|roll)/i.test(lastReplyNode.body);
 }

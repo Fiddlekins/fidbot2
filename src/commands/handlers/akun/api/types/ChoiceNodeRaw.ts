@@ -21,7 +21,7 @@ export interface ChoiceNodeRaw extends BaseNodeRaw {
   /**
    * List of choice descriptions
    */
-  choices: string[];
+  choices?: string[];
 
   /**
    * Undefined if the choice is open
@@ -93,7 +93,7 @@ export interface ChoiceNodeRaw extends BaseNodeRaw {
    * Maps session ID to votes cast
    * Includes all votes
    */
-  votes: Record<UserSessionId, ChoiceId[]>;
+  votes?: Record<UserSessionId, ChoiceId[]>;
 
   /**
    * TODO

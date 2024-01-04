@@ -12,22 +12,26 @@ export function processChoiceNode(choiceNodeRaw: ChoiceNodeRaw): ChoiceNode {
     }
   }
   const choices: ChoiceNode['choices'] = {};
-  for (let choiceIndex = 0; choiceIndex < choiceNodeRaw.choices.length; choiceIndex++) {
-    const choiceId = `${choiceIndex}`;
-    choices[choiceId] = choiceNodeRaw.choices[choiceIndex];
+  if (choiceNodeRaw.choices) {
+    for (let choiceIndex = 0; choiceIndex < choiceNodeRaw.choices.length; choiceIndex++) {
+      const choiceId = `${choiceIndex}`;
+      choices[choiceId] = choiceNodeRaw.choices[choiceIndex];
+    }
   }
   const voters: ChoiceNode['voters'] = {};
-  for (const userSessionId of Object.keys(choiceNodeRaw.votes)) {
-    const userId = choiceNodeRaw.uidUser[userSessionId] as UUID | undefined;
-    if (userId) {
-      voters[userSessionId] = {
-        userSessionId,
-        userId
-      };
-    } else {
-      voters[userSessionId] = {
-        userSessionId
-      };
+  if (choiceNodeRaw.votes) {
+    for (const userSessionId of Object.keys(choiceNodeRaw.votes)) {
+      const userId = choiceNodeRaw.uidUser[userSessionId] as UUID | undefined;
+      if (userId) {
+        voters[userSessionId] = {
+          userSessionId,
+          userId
+        };
+      } else {
+        voters[userSessionId] = {
+          userSessionId
+        };
+      }
     }
   }
 
@@ -48,7 +52,7 @@ export function processChoiceNode(choiceNodeRaw: ChoiceNodeRaw): ChoiceNode {
     multiple: !!choiceNodeRaw.multiple,
     nodeType: 'choice',
     storyNodeId: choiceNodeRaw.sid,
-    votes: choiceNodeRaw.votes,
+    votes: choiceNodeRaw.votes || {},
     voters,
   };
 }

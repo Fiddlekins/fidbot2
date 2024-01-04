@@ -1,9 +1,14 @@
 import {Client, Guild, GuildMember} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
+import {Cache} from "../Cache";
 import {lockedUserCache} from "../commands/handlers/nickname/config";
 import {getGuildSettings} from "../settings";
 import {Feature, GuildMemberUpdateHandler} from "../types";
 import {getRandomIntInRange} from "../utils/random";
+
+const inflightSetNicknamesCache = new Cache({
+  id: 'inflightSetNicknamesCache'
+})
 
 async function setNickname(guildMember: GuildMember, nickname: string) {
   try {
@@ -46,13 +51,23 @@ async function init(client: Client<true>) {
 async function guildMemberUpdate(oldMember: Parameters<GuildMemberUpdateHandler>[0], newMember: Parameters<GuildMemberUpdateHandler>[1]) {
   const isFeatureEnabled = getGuildSettings(newMember.guild.id).nickname;
   if (isFeatureEnabled) {
-    const existingGuildTargets = lockedUserCache.get(newMember.guild.id) || {};
-    const lockedName = existingGuildTargets[newMember.id] as string | undefined;
+    const inflightCacheKey = `${newMember.guild.id}-${newMember.id}`;
+    if (inflightSetNicknamesCache.get(inflightCacheKey)) {
+      // Avoid multiple concurrent delayed nickname updates by returning early if one is already inflight
+      return;
+    }
+    let existingGuildTargets = lockedUserCache.get(newMember.guild.id) || {};
+    let lockedName = existingGuildTargets[newMember.id] as string | undefined;
     if (lockedName) {
+      inflightSetNicknamesCache.set(inflightCacheKey, true);
       await setTimeout(getRandomIntInRange(3 * 1000, 5 * 60 * 1000));
-      if (newMember.nickname !== lockedName) {
+      // Refresh the target name
+      existingGuildTargets = lockedUserCache.get(newMember.guild.id) || {};
+      lockedName = existingGuildTargets[newMember.id] as string | undefined;
+      if (lockedName && newMember.nickname !== lockedName) {
         await setNickname(newMember, lockedName);
       }
+      inflightSetNicknamesCache.set(inflightCacheKey, false);
     }
   }
 }

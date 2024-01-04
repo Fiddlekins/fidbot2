@@ -178,8 +178,12 @@ async function enhanceStoryEmbed(
     storyContentPromise = getStoryContent(storyNode.id);
   }
   let storyChatPromise;
+  // The idea was for it to skip the chat fetch if the storyNode had an adequate lastReply
+  // However, upon testing, it seems that the storyNode can (randomly) have a stale lastReply
+  // As such we always fetch chat and update with a more recent lastReply if applicable
   if (isLastReplyAdequate(storyNode.lastReply)) {
-    storyChatPromise = Promise.resolve(null);
+    // storyChatPromise = Promise.resolve(null);
+    storyChatPromise = getStoryChatLatest(storyNode.id);
   } else {
     storyChatPromise = getStoryChatLatest(storyNode.id);
   }

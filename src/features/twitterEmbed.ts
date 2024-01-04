@@ -1,7 +1,13 @@
 import {Message, Partialize} from "discord.js";
 import {Cache} from "../Cache";
 import {getGuildSettings} from "../settings";
-import {Feature, MessageCreateHandler, MessageUpdateHandler} from "../types";
+import {
+  Feature,
+  MessageBulkDeleteHandler,
+  MessageCreateHandler,
+  MessageDeleteHandler,
+  MessageUpdateHandler
+} from "../types";
 import {extractSpoileredContent} from "../utils/extractSpoileredContent";
 
 function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pinned" | "system", "author" | "content" | "cleanContent">): boolean {
@@ -75,10 +81,36 @@ async function messageUpdate(oldMessage: Parameters<MessageUpdateHandler>[0], ne
   }
 }
 
+async function checkAndDelete(messageId: string) {
+  const priorResponse = cache.get(messageId);
+  if (priorResponse) {
+    cache.delete(messageId);
+    await priorResponse.delete();
+  }
+}
+
+async function messageDelete(message: Parameters<MessageDeleteHandler>[0]) {
+  if (isBotAuthor(message)) {
+    return;
+  }
+  await checkAndDelete(message.id);
+}
+
+async function messageBulkDelete(messages: Parameters<MessageBulkDeleteHandler>[0]) {
+  for (const message of messages.values()) {
+    if (isBotAuthor(message)) {
+      return;
+    }
+    await checkAndDelete(message.id);
+  }
+}
+
 export const twitterEmbed: Feature = {
   data: {
     name: 'twitterEmbed',
   },
   messageCreate,
   messageUpdate,
+  messageDelete,
+  messageBulkDelete,
 };

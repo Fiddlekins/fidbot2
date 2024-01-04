@@ -33,6 +33,10 @@ export type MessageCreateHandler = (...args: ClientEvents[Events.MessageCreate])
 
 export type MessageUpdateHandler = (...args: ClientEvents[Events.MessageUpdate]) => Promise<void>;
 
+export type MessageDeleteHandler = (...args: ClientEvents[Events.MessageDelete]) => Promise<void>;
+
+export type MessageBulkDeleteHandler = (...args: ClientEvents[Events.MessageBulkDelete]) => Promise<void>;
+
 export interface Feature {
   data: {
     name: string;
@@ -41,4 +45,6 @@ export interface Feature {
   guildMemberUpdate?: GuildMemberUpdateHandler;
   messageCreate?: MessageCreateHandler;
   messageUpdate?: MessageUpdateHandler;
+  messageDelete?: MessageDeleteHandler;
+  messageBulkDelete?: MessageBulkDeleteHandler;
 }

@@ -89,6 +89,22 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
   }
 });
 
+client.on(Events.MessageDelete, async (message) => {
+  try {
+    await Promise.all(features.map((feature) => feature.messageDelete?.(message).catch(console.error)));
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+client.on(Events.MessageBulkDelete, async (messages, channel) => {
+  try {
+    await Promise.all(features.map((feature) => feature.messageBulkDelete?.(messages, channel).catch(console.error)));
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
   try {
     await Promise.all(features.map((feature) => feature.guildMemberUpdate?.(oldMember, newMember).catch(console.error)));

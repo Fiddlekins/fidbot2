@@ -13,6 +13,7 @@ import {getStoryNode} from "./api/getStoryNode";
 import {StoryNode} from "./api/types";
 import {storyNameToIdCache} from "./config";
 import {getCleanBody} from "./utils/getCleanBody";
+import {getCleanTitle} from "./utils/getCleanTitle";
 import {getReadTime} from "./utils/getReadTime";
 import {getStoryUrl} from "./utils/getStoryUrl";
 import {getUserProfileUrl} from "./utils/getUserProfileUrl";
@@ -113,7 +114,7 @@ export async function executeQuery(interaction: ChatInputCommandInteraction) {
     // If we still couldn't find a storyNode then the input is either invalid or the cache is incomplete
     if (storyNode) {
       let embed = new EmbedBuilder()
-        .setTitle(clipText(escapeMarkdown(storyNode.title), discordLimits.embed.titleLength))
+        .setTitle(clipText(escapeMarkdown(getCleanTitle( storyNode.title)), discordLimits.embed.titleLength))
         .setURL(getStoryUrl(storyNode.id, storyNode.title))
         .setDescription(clipText(formatDescription(storyNode), discordLimits.embed.descriptionLength))
         .addFields({name: 'Word count', value: storyNode.wordCount.toString(), inline: true})
@@ -169,6 +170,7 @@ export async function autocompleteQuery(interaction: AutocompleteInteraction) {
   const choices = [...storyNameToIdCache.keys()].sort().map((title) => {
     return {
       title,
+      cleanTitle: getCleanTitle(title),
       simplifiedTitle: simplifyStoryTitle(title)
     };
   });
@@ -183,28 +185,28 @@ export async function autocompleteQuery(interaction: AutocompleteInteraction) {
     // The sub-sort lexicographically
     .sort((a, b) => {
       if (a.position === b.position) {
-        return a.title > b.title ? 1 : -1;
+        return a.cleanTitle > b.cleanTitle ? 1 : -1;
       }
       return a.position - b.position;
     });
   const options = clipArray(filtered, discordLimits.autocomplete.choiceCount)
     .map(choice => {
       // If the title is lacking, give up
-      if (choice.title.length < 1) {
+      if (choice.cleanTitle.length < 1) {
         return null;
       }
       if (choice.title.length > discordLimits.autocomplete.choiceNameLength) {
         // Truncate the label, and use the ID for the value
         //   (not ideal because it's gibberish in the final command preview, but it works around the length limit)
         return {
-          name: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
+          name: clipText(choice.cleanTitle, discordLimits.autocomplete.choiceNameLength),
           value: storyNameToIdCache.get(choice.title)
         }
       }
       // Desired behaviour, use the full title as label and value
       return {
-        name: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
-        value: clipText(choice.title, discordLimits.autocomplete.choiceNameLength),
+        name: clipText(choice.cleanTitle, discordLimits.autocomplete.choiceNameLength),
+        value: choice.title,
       };
     })
     .filter((choice): choice is { name: string, value: string } => choice !== null);

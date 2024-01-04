@@ -2,6 +2,7 @@
   "name": "fidbot2",
   "version": "1.0.0",
   "description": "A bot for discord.  \r All of the Fiddles.  \r Less of the snark.",
+  "packageManager": "yarn@3.6.1",
   "main": "main.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

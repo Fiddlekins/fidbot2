@@ -7,7 +7,7 @@ import {getRandomIntInRange} from "../utils/random";
 
 async function setNickname(guildMember: GuildMember, nickname: string) {
   try {
-    await guildMember.setNickname(nickname, `Changed from ${guildMember.nickname} to ${nickname}. Why? Ask yourself that question`);
+    await guildMember.setNickname(nickname, `Changed from ${guildMember.nickname || guildMember.displayName} to ${nickname}. Why? Ask yourself that question`);
   } catch (err) {
     console.error(err);
     // Swallow error

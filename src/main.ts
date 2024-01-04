@@ -3,6 +3,7 @@ import {commands} from "./commands";
 import {checkNewStories} from "./commands/handlers/akun/config";
 import {config} from "./config";
 import {features} from "./features";
+import {log} from "./utils/log";
 
 const client = new Client({
   intents: [
@@ -74,6 +75,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
+  log(message, 'create');
   try {
     await Promise.all(features.map((feature) => feature.messageCreate?.(message).catch(console.error)));
   } catch (error) {
@@ -82,6 +84,7 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
+  log(newMessage, 'update');
   try {
     await Promise.all(features.map((feature) => feature.messageUpdate?.(oldMessage, newMessage).catch(console.error)));
   } catch (error) {
@@ -90,6 +93,7 @@ client.on(Events.MessageUpdate, async (oldMessage, newMessage) => {
 });
 
 client.on(Events.MessageDelete, async (message) => {
+  log(message, 'delete');
   try {
     await Promise.all(features.map((feature) => feature.messageDelete?.(message).catch(console.error)));
   } catch (error) {
@@ -98,6 +102,7 @@ client.on(Events.MessageDelete, async (message) => {
 });
 
 client.on(Events.MessageBulkDelete, async (messages, channel) => {
+  messages.forEach((message) => log(message, 'delete'));
   try {
     await Promise.all(features.map((feature) => feature.messageBulkDelete?.(messages, channel).catch(console.error)));
   } catch (error) {

@@ -1,5 +1,6 @@
 import {DiceRoll} from "@dice-roller/rpg-dice-roller";
 import {ChatInputCommandInteraction, escapeMarkdown, hideLinkEmbed} from "discord.js";
+import {discordLimits} from "../../discordLimits";
 import {getGuildSettings} from "../../settings";
 import {CommandHandlers} from "../../types";
 
@@ -19,6 +20,10 @@ async function execute(interaction: ChatInputCommandInteraction) {
         reply = escapeMarkdown(`${input}\n${err}`);
       }
     }
+  }
+  if (reply.length > discordLimits.contentLength) {
+    reply = 'Output exceeded discord message size limit of 2000 characters';
+    ephemeral = true;
   }
   await interaction.reply({content: reply, ephemeral});
 }

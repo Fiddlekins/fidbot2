@@ -1,5 +1,6 @@
 import {Message, Partialize} from "discord.js";
 import {Cache} from "../Cache";
+import {clipText, discordLimits} from "../discordLimits";
 import {getGuildSettings} from "../settings";
 import {
   Feature,
@@ -8,6 +9,7 @@ import {
   MessageDeleteHandler,
   MessageUpdateHandler
 } from "../types";
+import {dedupe} from "../utils/dedupe";
 import {extractSpoileredContent} from "../utils/extractSpoileredContent";
 
 function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pinned" | "system", "author" | "content" | "cleanContent">): boolean {
@@ -24,12 +26,34 @@ function extractTwitterUrls(content: string): string[] {
   );
 }
 
+function removeUnembeddedUrls(content: string): string {
+  // Not exactly sure what discord `<url>` detection logic is, but `<url url>` is not unembedded by discord and
+  //   we don't care here about false positives because we only want the twitter URLs at the end
+  return content.replaceAll(/<\S+>/g, '');
+}
+
+function isTwitterUrlEmbeddable(twitterUrl: string): boolean {
+  // Twitter posts that get embedded are of the format `https://<domain>/<username>/status/<tweetId>`
+  return /https?:\/\/[^\\]+\/[^\\]+\/status\/\d+/.test(twitterUrl);
+}
+
 function fixTwitterUrl(url: string): string {
   return url.replace(/^https?:\/\/(?:twitter|x)\.com/, 'https://fxtwitter.com');
 }
 
+function getFixedTwitterUrls(content: string): string[] {
+  const twitterUrls = extractSpoileredContent(content).displayed
+    .map(removeUnembeddedUrls)
+    .map(extractTwitterUrls)
+    .reduce((acc, curr) => {
+      return [...acc, ...curr];
+    }, [])
+    .filter(isTwitterUrlEmbeddable);
+  return dedupe(twitterUrls);
+}
+
 function getResponse(twitterUrls: string[]): string {
-  return twitterUrls.map(fixTwitterUrl).join(' ');
+  return clipText(twitterUrls.map(fixTwitterUrl).join(' '), discordLimits.contentLength)
 }
 
 const cache = new Cache<Message>({id: 'twitterEmbedCache', maxSize: 400});
@@ -40,11 +64,7 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
   }
   const isFeatureEnabled = message.guildId ? getGuildSettings(message.guildId).twitterEmbed : false;
   if (isFeatureEnabled && message.content.length) {
-    const twitterUrls = extractSpoileredContent(message.content).displayed
-      .map(extractTwitterUrls)
-      .reduce((acc, curr) => {
-        return [...acc, ...curr];
-      }, []);
+    const twitterUrls = getFixedTwitterUrls(message.content);
     if (twitterUrls.length) {
       const response = await message.channel.send(getResponse(twitterUrls));
       cache.set(message.id, response);
@@ -58,11 +78,7 @@ async function messageUpdate(oldMessage: Parameters<MessageUpdateHandler>[0], ne
   }
   const isFeatureEnabled = newMessage.guildId ? getGuildSettings(newMessage.guildId).twitterEmbed : false;
   if (isFeatureEnabled && newMessage.content?.length) {
-    const twitterUrls = extractSpoileredContent(newMessage.content).displayed
-      .map(extractTwitterUrls)
-      .reduce((acc, curr) => {
-        return [...acc, ...curr];
-      }, []);
+    const twitterUrls = getFixedTwitterUrls(newMessage.content);
     const priorResponse = cache.get(newMessage.id);
     if (twitterUrls.length) {
       const newResponseContent = getResponse(twitterUrls);

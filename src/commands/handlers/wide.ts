@@ -1,4 +1,5 @@
 import {ChatInputCommandInteraction} from "discord.js";
+import {clipText, discordLimits} from "../../discordLimits";
 import {getGuildSettings} from "../../settings";
 import {CommandHandlers} from "../../types";
 
@@ -30,7 +31,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
       reply = `A wide nothing is still a nothing.`;
     }
   }
-  await interaction.reply({content: reply, ephemeral});
+  await interaction.reply({content: clipText(reply, discordLimits.contentLength), ephemeral});
 }
 
 export const wideHandlers: CommandHandlers = {

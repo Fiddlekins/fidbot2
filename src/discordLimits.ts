@@ -9,6 +9,8 @@ const component = {
   elementCount: 5,
 }
 
+const contentLength = 2000;
+
 const embed = {
   titleLength: 256,
   descriptionLength: 4096,
@@ -33,6 +35,7 @@ const nicknameLength = 32;
 export const discordLimits = {
   autocomplete,
   component,
+  contentLength,
   embed,
   modal,
   nicknameLength,

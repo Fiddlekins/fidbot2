@@ -1,8 +1,9 @@
 import {ChatInputCommandInteraction, Collection, GuildMember, userMention} from "discord.js";
+import {clipText, discordLimits} from "../../discordLimits";
 import {getGuildSettings} from "../../settings";
+import {CommandHandlers} from "../../types";
 import {extractUserNamesOrTagsFromText} from "../../utils/extractUserNamesOrTagsFromText";
 import {getRandomInt, getRandomIntInRange} from "../../utils/random";
-import {CommandHandlers} from "../../types";
 
 function isSubjectSelf(subject: string, interaction: ChatInputCommandInteraction): boolean {
   const subjectTransformed = subject.toLowerCase();
@@ -95,7 +96,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
       }
     }
     await interaction.reply({
-      content: `${processedSubject} is ${determiner} ${descriptor}! ${determiner.toUpperCase()} ${slurYelled}`,
+      content: clipText(`${processedSubject} is ${determiner} ${descriptor}! ${determiner.toUpperCase()} ${slurYelled}`, discordLimits.contentLength),
       ephemeral
     });
   }

@@ -1,7 +1,7 @@
 import {Client, Guild, GuildMember} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../Cache";
-import {lockedUserCache} from "../commands/handlers/nickname/config";
+import {GuildLockedNicknameTargets, lockedUserCache} from "../commands/handlers/nickname/config";
 import {getGuildSettings} from "../settings";
 import {Feature, GuildMemberUpdateHandler} from "../types";
 import {getRandomIntInRange} from "../utils/random";
@@ -19,6 +19,18 @@ async function setNickname(guildMember: GuildMember, nickname: string) {
   }
 }
 
+function getLockedName(guildTargets: GuildLockedNicknameTargets, userId: string): string | null {
+  const lock = guildTargets[userId] as GuildLockedNicknameTargets[string] | undefined;
+  if (lock) {
+    if (typeof lock === 'string') {
+      return lock;
+    } else {
+      return lock.lockedName;
+    }
+  }
+  return null;
+}
+
 async function init(client: Client<true>) {
   for (const guildId of lockedUserCache.keys()) {
     const existingGuildTargets = lockedUserCache.get(guildId) || {};
@@ -31,7 +43,7 @@ async function init(client: Client<true>) {
       }
       if (guild) {
         for (const userId of Object.keys(existingGuildTargets)) {
-          const lockedName = existingGuildTargets[userId];
+          const lockedName = getLockedName(existingGuildTargets, userId);
           if (lockedName) {
             try {
               const guildMember = await guild.members.fetch(userId);
@@ -57,13 +69,13 @@ async function guildMemberUpdate(oldMember: Parameters<GuildMemberUpdateHandler>
       return;
     }
     let existingGuildTargets = lockedUserCache.get(newMember.guild.id) || {};
-    let lockedName = existingGuildTargets[newMember.id] as string | undefined;
+    let lockedName = getLockedName(existingGuildTargets, newMember.id);
     if (lockedName) {
       inflightSetNicknamesCache.set(inflightCacheKey, true);
       await setTimeout(getRandomIntInRange(3 * 1000, 5 * 60 * 1000));
       // Refresh the target name
       existingGuildTargets = lockedUserCache.get(newMember.guild.id) || {};
-      lockedName = existingGuildTargets[newMember.id] as string | undefined;
+      lockedName = getLockedName(existingGuildTargets, newMember.id);
       if (lockedName && newMember.nickname !== lockedName) {
         await setNickname(newMember, lockedName);
       }

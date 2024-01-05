@@ -4,6 +4,8 @@ import {to2DArray} from "./utils/to2DArray";
 
 export type PaginatedButtonsState = 'active' | 'finished' | 'timedout' | 'error';
 
+export type PaginatedButtonsStateSetter = (stateNew: PaginatedButtonsState) => void;
+
 const PaginatedButtonNamespace = 'PaginatedButtons';
 
 export function getElementsPerPage() {
@@ -25,6 +27,7 @@ export function getPaginatedButtons<Type>(
   elementButtonBuilder: (element: Type, isActive: boolean) => ButtonBuilder,
   hasFinishControl: boolean,
 ) {
+  hasFinishControl = hasFinishControl && elements.length > 0;
   if (!hasFinishControl && elements.length < (discordLimits.component.elementCount * discordLimits.component.rowCount)) {
     // Can fit all on one page without navigation controls
     return clipArray(to2DArray(elements, discordLimits.component.elementCount), discordLimits.component.rowCount)
@@ -83,7 +86,7 @@ export function getPaginatedButtons<Type>(
 }
 
 export interface ExecutePaginatedButtonsOptions {
-  handleButton?: (customId: string) => Promise<void>,
+  handleButton?: (customId: string, setState: PaginatedButtonsStateSetter) => Promise<void>,
   wasDeferred?: boolean,
   ephemeral?: boolean;
   hasFinishControl?: boolean;
@@ -107,6 +110,9 @@ export async function executePaginatedButtons<Type>(
 
   let elements = await getElements();
   let state: PaginatedButtonsState = 'active';
+  const setState = (stateNew: PaginatedButtonsState) => {
+    state = stateNew;
+  }
   let page = clampPage(initialPage, elements);
   let content = await getContent(state);
   let response;
@@ -142,7 +148,7 @@ export async function executePaginatedButtons<Type>(
         }
       } else {
         // Defer to handler to update state elsewhere
-        await handleButton?.(action.customId);
+        await handleButton?.(action.customId, setState);
       }
       // Get fresh local state
       elements = await getElements();

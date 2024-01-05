@@ -1,7 +1,7 @@
 import {Cache} from "../../../Cache";
 
 export interface GuildLockedNicknameTargets {
-  [userId: string]: string;
+  [userId: string]: string | { lockedName: string, username: string };
 }
 
 export const lockedUserCache = new Cache<GuildLockedNicknameTargets>({

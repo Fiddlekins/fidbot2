@@ -32,7 +32,7 @@ export async function executeLock(interaction: ChatInputCommandInteraction) {
               const existingGuildTargets = lockedUserCache.get(interaction.guildId) || {};
               lockedUserCache.set(interaction.guildId, {
                 ...existingGuildTargets,
-                [user.id]: lockedName,
+                [user.id]: {lockedName, username: user.username},
               });
               await interaction.reply({
                 content: `Locked ${userMention(user.id)} with nickname "${lockedName}"`,

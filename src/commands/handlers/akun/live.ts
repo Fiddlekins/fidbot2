@@ -1,4 +1,5 @@
 import {ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
+import {clipText, discordLimits} from "../../../discordLimits";
 import {executePaginatedButtons, PaginatedButtonsState} from "../../../paginatedButtons";
 import {getGuildSettings} from "../../../settings";
 import {getLive} from "./api/getLive";
@@ -8,7 +9,7 @@ import {getStoryUrl} from "./utils/getStoryUrl";
 
 function partialStoryNodeButtonBuilder(partialStoryNode: PartialStoryNode) {
   return new ButtonBuilder()
-    .setLabel(getCleanTitle(partialStoryNode.title))
+    .setLabel(clipText(getCleanTitle(partialStoryNode.title), discordLimits.component.buttonLabelLength))
     .setStyle(ButtonStyle.Link)
     .setURL(getStoryUrl(partialStoryNode.id, partialStoryNode.title));
 }

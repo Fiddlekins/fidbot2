@@ -7,6 +7,7 @@ const autocomplete = {
 const component = {
   rowCount: 5,
   elementCount: 5,
+  buttonLabelLength: 80,
 }
 
 const contentLength = 2000;

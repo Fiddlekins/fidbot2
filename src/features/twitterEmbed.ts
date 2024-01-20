@@ -1,4 +1,5 @@
 import {Message, Partialize} from "discord.js";
+import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../Cache";
 import {clipText, discordLimits} from "../discordLimits";
 import {getGuildSettings} from "../settings";
@@ -17,6 +18,10 @@ function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pi
     return message.author.id === message.client.user.id;
   }
   return false;
+}
+
+function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
+  return message.embeds.map((embed) => embed.url).filter((url): url is string => url !== null);
 }
 
 function extractTwitterUrls(content: string): string[] {
@@ -41,7 +46,21 @@ function fixTwitterUrl(url: string): string {
   return url.replace(/^https?:\/\/(?:twitter|x)\.com/, 'https://fxtwitter.com');
 }
 
-function getFixedTwitterUrls(content: string): string[] {
+function normaliseTwitterUrl(url: string): string {
+  const [nonQueryString] = url.split('?');
+  return fixTwitterUrl(nonQueryString);
+}
+
+function removeAlreadyEmbeddedUrls(twitterUrls: string[], embeddedUrls: string[]): string[] {
+  return twitterUrls.filter((url) => {
+    const normalisedUrl = normaliseTwitterUrl(url);
+    return embeddedUrls.every((embeddedUrl) => {
+      return normaliseTwitterUrl(embeddedUrl) !== normalisedUrl;
+    });
+  });
+}
+
+function getFixedTwitterUrls(content: string, embeddedUrls: string[]): string[] {
   const twitterUrls = extractSpoileredContent(content).displayed
     .map(removeUnembeddedUrls)
     .map(extractTwitterUrls)
@@ -49,14 +68,75 @@ function getFixedTwitterUrls(content: string): string[] {
       return [...acc, ...curr];
     }, [])
     .filter(isTwitterUrlEmbeddable);
-  return dedupe(twitterUrls);
+  return removeAlreadyEmbeddedUrls(dedupe(twitterUrls), embeddedUrls);
 }
 
 function getResponse(twitterUrls: string[]): string {
   return clipText(twitterUrls.map(fixTwitterUrl).join(' '), discordLimits.contentLength)
 }
 
-const cache = new Cache<Message>({id: 'twitterEmbedCache', maxSize: 400});
+class TwitterEmbedMonitor {
+  message: Parameters<MessageUpdateHandler>[1];
+  previouslyEmbeddedUrls: string[] = [];
+  lastResponseContent: string | null = null;
+  response: Message | null = null;
+  action: Promise<void>;
+  isDeleted: boolean = false;
+
+  constructor(message: Parameters<MessageUpdateHandler>[1]) {
+    this.message = message;
+    this.action = setTimeout(250);
+    this.respond();
+  }
+
+  respond() {
+    const handledMessage = this.message;
+    this.action = this.action
+      .then(async () => {
+        if (!this.isDeleted) {
+          // Is this respond instance still handling the latest message
+          if (this.message === handledMessage) {
+            // Message updates don't contain unchanged embeds or something
+            this.previouslyEmbeddedUrls = this.previouslyEmbeddedUrls.concat(getEmbedUrls(handledMessage));
+            const twitterUrls = handledMessage.content ? getFixedTwitterUrls(handledMessage.content, this.previouslyEmbeddedUrls) : [];
+            const priorResponse = this.response;
+            if (twitterUrls.length) {
+              const newResponseContent = getResponse(twitterUrls);
+              if (newResponseContent !== this.lastResponseContent) {
+                this.lastResponseContent = newResponseContent;
+                if (priorResponse) {
+                  this.response = await priorResponse.edit(newResponseContent);
+                } else {
+                  this.response = await handledMessage.channel.send(newResponseContent);
+                }
+              }
+            } else {
+              if (priorResponse) {
+                await priorResponse.delete();
+              }
+            }
+          }
+        }
+      });
+  }
+
+  delete() {
+    this.isDeleted = true;
+    this.action = this.action
+      .then(async () => {
+        await this.response?.delete();
+      });
+  }
+
+  setLatestMessage(message: Parameters<MessageUpdateHandler>[1]) {
+    if (!this.isDeleted) {
+      this.message = message;
+      this.respond();
+    }
+  }
+}
+
+const cache = new Cache<TwitterEmbedMonitor>({id: 'twitterEmbedCache', maxSize: 1000});
 
 async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
   if (isBotAuthor(message)) {
@@ -64,10 +144,9 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
   }
   const isFeatureEnabled = message.guildId ? getGuildSettings(message.guildId).twitterEmbed : false;
   if (isFeatureEnabled && message.content.length) {
-    const twitterUrls = getFixedTwitterUrls(message.content);
+    const twitterUrls = getFixedTwitterUrls(message.content, getEmbedUrls(message));
     if (twitterUrls.length) {
-      const response = await message.channel.send(getResponse(twitterUrls));
-      cache.set(message.id, response);
+      cache.set(message.id, new TwitterEmbedMonitor(message));
     }
   }
 }
@@ -78,30 +157,18 @@ async function messageUpdate(oldMessage: Parameters<MessageUpdateHandler>[0], ne
   }
   const isFeatureEnabled = newMessage.guildId ? getGuildSettings(newMessage.guildId).twitterEmbed : false;
   if (isFeatureEnabled && newMessage.content?.length) {
-    const twitterUrls = getFixedTwitterUrls(newMessage.content);
-    const priorResponse = cache.get(newMessage.id);
-    if (twitterUrls.length) {
-      const newResponseContent = getResponse(twitterUrls);
-      if (priorResponse) {
-        await priorResponse.edit(newResponseContent);
-      } else {
-        const response = await newMessage.channel.send(newResponseContent);
-        cache.set(newMessage.id, response);
-      }
-    } else {
-      if (priorResponse) {
-        cache.delete(newMessage.id);
-        await priorResponse.delete();
-      }
+    const twitterEmbedMonitor = cache.get(newMessage.id);
+    if (twitterEmbedMonitor) {
+      twitterEmbedMonitor.setLatestMessage(newMessage);
     }
   }
 }
 
 async function checkAndDelete(messageId: string) {
-  const priorResponse = cache.get(messageId);
-  if (priorResponse) {
+  const twitterEmbedMonitor = cache.get(messageId);
+  if (twitterEmbedMonitor) {
     cache.delete(messageId);
-    await priorResponse.delete();
+    twitterEmbedMonitor.delete();
   }
 }
 

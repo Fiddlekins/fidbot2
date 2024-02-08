@@ -21,7 +21,19 @@ function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pi
 }
 
 function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
-  return message.embeds.map((embed) => embed.url).filter((url): url is string => url !== null);
+  return message.embeds
+    .map((embed) => {
+      if (embed.title === 'X'
+        && /^https?:\/\/(?:twitter|x)\.com/i.test(embed.url || '')
+        && !embed.description
+        && !embed.image
+      ) {
+        // The Discord native embed is lacking all tweet content and thus considered to be failed
+        return null;
+      }
+      return embed.url;
+    })
+    .filter((url): url is string => url !== null);
 }
 
 function extractTwitterUrls(content: string): string[] {
@@ -121,11 +133,13 @@ class TwitterEmbedMonitor {
   }
 
   delete() {
-    this.isDeleted = true;
-    this.action = this.action
-      .then(async () => {
-        await this.response?.delete();
-      });
+    if (!this.isDeleted) {
+      this.isDeleted = true;
+      this.action = this.action
+        .then(async () => {
+          await this.response?.delete();
+        });
+    }
   }
 
   setLatestMessage(message: Parameters<MessageUpdateHandler>[1]) {

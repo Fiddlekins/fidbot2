@@ -1,4 +1,4 @@
-import {Message, Partialize} from "discord.js";
+import {EmbedAssetData, Message, Partialize} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../Cache";
 import {clipText, discordLimits} from "../discordLimits";
@@ -20,13 +20,24 @@ function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pi
   return false;
 }
 
+function isValidEmbedImage(image: EmbedAssetData | null): boolean {
+  if (!image) {
+    return false;
+  }
+  // For some reason some twitter embeds now have iamges attached that are invalid URLs starting with:
+  if (/https?:\/\/abs.twimg.com\/responsive-web/i.test(image.url)) {
+    return false;
+  }
+  return true;
+}
+
 function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
   return message.embeds
     .map((embed) => {
       if (embed.title === 'X'
         && /^https?:\/\/(?:twitter|x)\.com/i.test(embed.url || '')
         && !embed.description
-        && !embed.image
+        && !isValidEmbedImage(embed.image)
       ) {
         // The Discord native embed is lacking all tweet content and thus considered to be failed
         return null;

@@ -5,7 +5,7 @@ import {
   ClientEvents,
   Events,
   ModalSubmitInteraction,
-  SlashCommandBuilder,
+  SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder
 } from "discord.js";
 
@@ -16,13 +16,13 @@ export type AutocompleteHandler = (interaction: AutocompleteInteraction) => Prom
 export type ModalSubmitHandler = (interaction: ModalSubmitInteraction) => Promise<void>;
 
 export interface CommandHandlers {
-  execute: CommandHandler,
-  autocomplete?: AutocompleteHandler,
-  modalSubmit?: ModalSubmitHandler,
+  execute: CommandHandler;
+  autocomplete?: AutocompleteHandler;
+  modalSubmit?: ModalSubmitHandler;
 }
 
 export interface Command extends CommandHandlers {
-  data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">,
+  data: SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
 }
 
 export type InitHandler = (client: Client<true>) => Promise<void>;

@@ -1,4 +1,5 @@
 import {ChatInputCommandInteraction} from "discord.js";
+import {RE2} from 're2-wasm';
 import {discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
 import {autoreplyCache, AutoreplyConfig, GuildAutoreplyConfigs} from "./config";
@@ -13,7 +14,7 @@ export async function executeCreate(interaction: ChatInputCommandInteraction) {
       let isMatchInvalid = false;
       if (match) {
         try {
-          new RegExp(match, 'l');
+          new RE2(match, 'ui');
         } catch (err) {
           console.log(err);
           isMatchInvalid = true;

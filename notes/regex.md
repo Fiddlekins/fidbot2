@@ -24,3 +24,7 @@ For simplicity, I have chosen to go with the flag option at this point since it 
 
 - For some reason beyond my comprehension the V8 flag throws an error when the `i` flag is used in the regex
   - The re2 syntax states that `i` flag is supported, making this even more perplexing
+
+## Update
+
+The inability to use the `i` flag has become overbearing and I have switched to using the re2-wasm module.

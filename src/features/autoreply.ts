@@ -1,5 +1,6 @@
 import {userMention} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
+import {RE2} from 're2-wasm';
 import {autoreplyCache, AutoreplyConfig} from "../commands/handlers/autoreply/config";
 import {getGuildSettings} from "../settings";
 import {Feature, MessageCreateHandler} from "../types";
@@ -20,7 +21,7 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
       }
       const matchedAutoreplyConfigs = autoreplyConfigs.filter(({match}) => {
         if (match) {
-          const re = new RegExp(match, 'l');
+          const re = new RE2(match, 'ui');
           return re.test(message.content)
         }
         return true;

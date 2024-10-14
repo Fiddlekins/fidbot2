@@ -19,7 +19,7 @@ export const autoreplyData = new SlashCommandBuilder()
     )
     .addStringOption(option => option
       .setName('match')
-      .setDescription('Only reply to messages that match this pattern. This is a case-sensitive regular expression')
+      .setDescription('Only reply to messages that match this pattern. This is a case-insensitive regular expression')
     )
   )
   .addSubcommand(subcommand => subcommand
@@ -31,11 +31,11 @@ export const autoreplyData = new SlashCommandBuilder()
     )
     .addStringOption(option => option
       .setName('match')
-      .setDescription('Filter by match pattern. This is used for a case-sensitive substring check')
+      .setDescription('Filter by match pattern. This is used for a case-insensitive substring check')
     )
     .addStringOption(option => option
       .setName('response')
-      .setDescription('Filter by response. This is a case-sensitive regular expression')
+      .setDescription('Filter by response. This is a case-insensitive regular expression')
     )
   )
   .addSubcommand(subcommand => subcommand

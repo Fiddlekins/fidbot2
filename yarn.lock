@@ -295,6 +295,7 @@ __metadata:
     akun-dice: "https://github.com/Fiddlekins/akun-dice.git"
     discord.js: ^14.15.3
     dotenv: ^16.3.1
+    re2-wasm: ^1.0.2
     table: ^6.8.2
     typescript: ^5.3.3
   languageName: unknown
@@ -379,6 +380,13 @@ __metadata:
   version: 2.1.0
   resolution: "random-js@npm:2.1.0"
   checksum: cdee38c303aafe441bd7809810b9dff9f6fdd9f356775bbd7e138943c0bc782a5f0ab473d3fac9d58da759d3976c1eef421d8a3f76f56301c805cc11bc496a11
+  languageName: node
+  linkType: hard
+
+"re2-wasm@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "re2-wasm@npm:1.0.2"
+  checksum: cd47ad62db1e2f01dec40129f0c994f86bebbade1bd85920fa32229bec0a64b0ebbf550fefbba68a1f8268b73d811f223f79264d5ed9a208efda3fb832e9f0a9
   languageName: node
   linkType: hard
 

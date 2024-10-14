@@ -1,4 +1,5 @@
 import {ChatInputCommandInteraction} from "discord.js";
+import {RE2} from "re2-wasm";
 import {table} from 'table';
 import {TableUserConfig} from "table/dist/src/types/api";
 import {discordLimits} from "../../../discordLimits";
@@ -48,7 +49,7 @@ function generateContentPage(
 ) {
   const data = autoreplyConfigs.slice(startIndex, startIndex + count)
     .map(({id, user, match, response}) => {
-      return [id, user || '', match?.length ? `/${match}/` : '', response];
+      return [id, user || '', match?.length ? `/${match}/ui` : '', response];
     });
   const tableString = table([
     tableHeaders,
@@ -63,7 +64,7 @@ function forceFitSingleEntryContentPage(
   const {id, user, match, response} = autoreplyConfig;
   const tableString = table([
     tableHeaders,
-    [id, user || '', match?.length ? `/${match}/` : '', response]
+    [id, user || '', match?.length ? `/${match}/ui` : '', response]
   ], tableConfig);
   // Be lazy and just clip the bottom of the table off to make it fit
   // This conveniently means both match and response get trimmed in a relatively proportional manner too
@@ -156,8 +157,8 @@ export async function executeList(interaction: ChatInputCommandInteraction) {
       }
       if (response) {
         autoreplyConfigs = autoreplyConfigs.filter((autoreplyConfig) => {
-          // case-sensitive regex check
-          const regex = new RegExp(response, 'l');
+          // case-insensitive regex check
+          const regex = new RE2(response, 'ui');
           return regex.test(autoreplyConfig.response);
         });
       }

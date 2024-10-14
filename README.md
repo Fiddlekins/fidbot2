@@ -52,7 +52,7 @@ The response itself is largely static, but can contain the following templated v
 - `<user>` will be replaced by a discord mention of the user who posted the message this is in reply to
 
 The regex patterns use the following [syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions) but with some restrictions, mainly the inability to use the forward and back referencing.
-This is to avoid you cretins submitting a hilarious combination of regex and input that locks the bot up computing the result for all eternity in what's known as a ReDoS attack.
+This is to avoid you cretins submitting a hilarious combination of regex and input that locks the bot up computing the result for all eternity in what's known as a ReDoS attack. Actually the exact syntax is described [here](https://github.com/google/re2/wiki/Syntax) but this is probably harder to understand and mostly the same as the other link.
 
 It is worth noting that when there are multiple matching rules, only three will be executed.
 It prioritises user specific rules over generic rules, and within each category it prioritises by how recently created the rule is.
@@ -75,7 +75,10 @@ Conversely, using basic regex such as using `[0-9]` for this parameter will make
 Fidbot displays a list of autoreply rules that only the user of the command can see.
 This provides the ID for each rule, which is required when wanting to delete a rule.
 
-The optional parameters will filter down the listed output to make it easier to manage lots of rules. 
+The optional parameters will filter down the listed output to make it easier to manage lots of rules.
+
+Displayed match entries will show as `/<match>/ui` where `<match>` is the parameter that was entered during creation.
+This is to reflect the `ui` regex flags that it executes with, which specifically mean that it runs in unicode mode and case-insensitive mode.
 
 ##### `/autoreply remove <id>`
 

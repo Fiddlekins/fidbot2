@@ -139,16 +139,20 @@ export async function executeList(interaction: ChatInputCommandInteraction) {
         }
       } else {
         for (const userId of Object.keys(guildAutoreplyConfigs.specificUser)) {
-          const member = await interaction.guild.members.fetch(userId);
-          autoreplyConfigs = autoreplyConfigs.concat(
-            guildAutoreplyConfigs.specificUser[userId]
-              .map((autoreplyConfig) => {
-                return {
-                  ...autoreplyConfig,
-                  user: member.user.username,
-                };
-              })
-          );
+          try {
+            const member = await interaction.guild.members.fetch(userId);
+            autoreplyConfigs = autoreplyConfigs.concat(
+              guildAutoreplyConfigs.specificUser[userId]
+                .map((autoreplyConfig) => {
+                  return {
+                    ...autoreplyConfig,
+                    user: member.user.username,
+                  };
+                })
+            );
+          } catch (err) {
+            console.error(`Failed to retrieve member ${userId}:\n${err}`);
+          }
         }
       }
       if (match) {

@@ -129,7 +129,11 @@ class TwitterEmbedMonitor {
               }
             } else {
               if (priorResponse) {
-                await priorResponse.delete();
+                try {
+                  await priorResponse.delete();
+                } catch (err) {
+                  // ignore error, typically means post has already been deleted by something
+                }
               }
             }
           }
@@ -143,6 +147,9 @@ class TwitterEmbedMonitor {
       this.action = this.action
         .then(async () => {
           await this.response?.delete();
+        })
+        .catch(() => {
+          // ignore error, typically means post has already been deleted by something
         });
     }
   }

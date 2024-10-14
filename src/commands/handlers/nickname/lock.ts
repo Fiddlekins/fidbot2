@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, userMention} from "discord.js";
+import {ChatInputCommandInteraction, GuildMember, userMention} from "discord.js";
 import {config} from "../../../config";
 import {discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
@@ -11,7 +11,19 @@ export async function executeLock(interaction: ChatInputCommandInteraction) {
       const user = interaction.options.getUser('user');
       let lockedName = interaction.options.getString('locked-name');
       if (user) {
-        const guildMember = await interaction.guild.members.fetch(user.id);
+        let guildMember: GuildMember | null = null;
+        try {
+          guildMember = await interaction.guild.members.fetch(user.id);
+        } catch (err) {
+          // ignore error
+        }
+        if (!guildMember) {
+          await interaction.reply({
+            content: `Cannot find user in server, have they left?`,
+            ephemeral: true
+          });
+          return;
+        }
         lockedName = lockedName || guildMember.nickname;
         if (lockedName) {
           if (lockedName.length >= discordLimits.nicknameLength) {

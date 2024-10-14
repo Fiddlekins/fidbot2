@@ -51,7 +51,7 @@ async function init(client: Client<true>) {
                 await setNickname(guildMember, lockedName);
               }
             } catch (err) {
-              console.error(err);
+              // Seems stable enough, no need to log it
             }
           }
         }

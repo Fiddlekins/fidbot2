@@ -134,6 +134,8 @@ export async function executeList(interaction: ChatInputCommandInteraction) {
                 user: user.username,
               };
             });
+        } else {
+          autoreplyConfigs = [];
         }
       } else {
         for (const userId of Object.keys(guildAutoreplyConfigs.specificUser)) {
@@ -163,7 +165,7 @@ export async function executeList(interaction: ChatInputCommandInteraction) {
         });
       }
       if (autoreplyConfigs.length) {
-        autoreplyConfigs = autoreplyConfigs.sort((a, b) => a.created - b.created);
+        autoreplyConfigs = autoreplyConfigs.sort((a, b) => a.id - b.id);
         let {
           contentPages,
           lastProcessedAutoreplyConfigIndex,
@@ -178,7 +180,7 @@ export async function executeList(interaction: ChatInputCommandInteraction) {
           interaction,
           async () => {
             const meanAutoreplyConfigsPerPage = (lastProcessedAutoreplyConfigIndex + 1) / contentPages.length;
-            return Math.round(autoreplyConfigs.length / meanAutoreplyConfigsPerPage);
+            return Math.ceil(autoreplyConfigs.length / meanAutoreplyConfigsPerPage);
           },
           {
             ephemeral: true,

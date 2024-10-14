@@ -46,7 +46,8 @@ export async function checkNewStories() {
     }
   } catch (err) {
     // Errors do not prevent the next check
-    console.error(err);
+    // Don't bother logging the errors, it's typically cloudflare timeout or something but in general this works sufficiently
+    // console.error(err);
   }
   // Wait 10 mins before checking again
   await setTimeout(10 * 60 * 1000);

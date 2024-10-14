@@ -11,7 +11,7 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
     return;
   }
   const isFeatureEnabled = message.guildId ? getGuildSettings(message.guildId).autoreply : false;
-  if (isFeatureEnabled && message.guildId && message.content.length) {
+  if (isFeatureEnabled && message.guildId) {
     const guildAutoreplyConfigs = autoreplyCache.get(message.guildId);
     if (guildAutoreplyConfigs) {
 
@@ -22,7 +22,7 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
       const matchedAutoreplyConfigs = autoreplyConfigs.filter(({match}) => {
         if (match) {
           const re = new RE2(match, 'ui');
-          return re.test(message.content)
+          return re.test(message.content);
         }
         return true;
       });

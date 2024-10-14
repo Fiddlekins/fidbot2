@@ -50,5 +50,8 @@ export async function checkNewStories() {
   }
   // Wait 10 mins before checking again
   await setTimeout(10 * 60 * 1000);
-  checkNewStories().catch(console.error);
+  checkNewStories().catch((err) => {
+    // Don't bother logging the errors, it's typically cloudflare timeout or something but in general this works sufficiently
+    // console.error(err);
+  });
 }

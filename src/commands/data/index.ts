@@ -1,6 +1,7 @@
 import {Collection} from "discord.js";
 import {Command} from "../../types";
 import {akunData} from "./akun";
+import {autoreplyData} from "./autoreply";
 import {callData} from "./call";
 import {choiceData} from "./choice";
 import {magic8ballData} from "./magic8ball";
@@ -12,6 +13,7 @@ import {wideData} from "./wide";
 export const commandData = new Collection<string, Command['data']>();
 [
   akunData,
+  autoreplyData,
   callData,
   choiceData,
   magic8ballData,

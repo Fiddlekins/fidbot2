@@ -1,5 +1,6 @@
 import {ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, userMention} from "discord.js";
-import {executePaginatedButtons, PaginatedButtonsState} from "../../../paginatedButtons";
+import {PaginatedButtonsState} from "../../../paginatedButtons";
+import {executePaginatedButtonsWithButtonElements} from "../../../paginatedButtonsWithButtonElements";
 import {getGuildSettings} from "../../../settings";
 import {GuildLockedNicknameTargets, lockedUserCache} from "./config";
 
@@ -76,7 +77,7 @@ export async function executeFree(interaction: ChatInputCommandInteraction) {
             });
           }
         } else {
-          await executePaginatedButtons<Target>(
+          await executePaginatedButtonsWithButtonElements<Target>(
             interaction,
             async () => {
               if (interaction.guildId) {
@@ -85,29 +86,29 @@ export async function executeFree(interaction: ChatInputCommandInteraction) {
               }
               return [];
             },
-            async (state: PaginatedButtonsState, error?: unknown) => {
-              switch (state) {
-                case "active":
-                  return 'Click the buttons to remove the nickname lock from the given user. Removing the lock does not reset the nickname';
-                case "finished":
-                  return 'Finished freeing users'
-                case "timedout":
-                  return 'Finished freeing users'
-                case "error":
-                  return 'Something went wrong...';
-                default:
-                  return 'Something went wrong...';
-              }
-            },
             targetButtonBuilder,
             {
-              handleButton: async (customId: string, setState) => {
+              handleButton: async (customId: string, setStatus) => {
                 if (interaction.guildId) {
                   freeUser(interaction.guildId, customId);
                   const existingGuildTargets = lockedUserCache.get(interaction.guildId) || {};
                   if (Object.keys(existingGuildTargets).length <= 0) {
-                    setState('finished');
+                    setStatus('finished');
                   }
+                }
+              },
+              getContent: async (state: PaginatedButtonsState) => {
+                switch (state.status) {
+                  case "active":
+                    return 'Click the buttons to remove the nickname lock from the given user. Removing the lock does not reset the nickname';
+                  case "finished":
+                    return 'Finished freeing users'
+                  case "timedout":
+                    return 'Finished freeing users'
+                  case "error":
+                    return 'Something went wrong...';
+                  default:
+                    return 'Something went wrong...';
                 }
               },
             }

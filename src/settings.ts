@@ -3,6 +3,7 @@ import {Cache} from "./Cache";
 export interface GuildSettings {
   // slash commands
   akun: boolean;
+  autoreply: boolean;
   call: boolean;
   choice: boolean;
   nickname: boolean;
@@ -21,6 +22,7 @@ export interface GuildSettings {
 
 export const defaultGuildSettings: GuildSettings = {
   akun: true,
+  autoreply: false,
   call: true,
   choice: true,
   nickname: false,

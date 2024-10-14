@@ -15,13 +15,14 @@ function getSettingComponents(guildSettings: GuildSettings, active: boolean) {
   const firstRow = new ActionRowBuilder<ButtonBuilder>();
   firstRow.addComponents(
     getSettingToggleButton('akun', 'akun', guildSettings.akun, active),
+    getSettingToggleButton('autoreply', 'autoreply', guildSettings.autoreply, active),
     getSettingToggleButton('call', 'call', guildSettings.call, active),
     getSettingToggleButton('choice', 'choice', guildSettings.choice, active),
     getSettingToggleButton('nickname', 'nickname', guildSettings.nickname, active),
-    getSettingToggleButton('roll', 'roll', guildSettings.roll, active),
   )
   const secondRow = new ActionRowBuilder<ButtonBuilder>();
   secondRow.addComponents(
+    getSettingToggleButton('roll', 'roll', guildSettings.roll, active),
     getSettingToggleButton('wide', 'wide', guildSettings.wide, active),
     getSettingToggleButton('8ball', '8ball', guildSettings["8ball"], active),
   )

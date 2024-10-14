@@ -9,7 +9,7 @@
     "build:watch": "tsc -w -p tsconfig.json",
     "deploy": "node dist/scripts/deploy.js",
     "prepop": "node dist/scripts/prepopulateAkunCaches.js",
-    "start": "node dist/main.js",
+    "start": "node --enable-experimental-regexp-engine dist/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -18,7 +18,8 @@
     "@dice-roller/rpg-dice-roller": "^5.5.0",
     "akun-dice": "https://github.com/Fiddlekins/akun-dice.git",
     "discord.js": "^14.15.3",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "table": "^6.8.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

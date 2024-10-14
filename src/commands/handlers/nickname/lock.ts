@@ -16,7 +16,7 @@ export async function executeLock(interaction: ChatInputCommandInteraction) {
         if (lockedName) {
           if (lockedName.length >= discordLimits.nicknameLength) {
             await interaction.reply({
-              content: `"${lockedName}" exceeds the 32 character length limit imposed by Discord`,
+              content: `"${lockedName}" exceeds the ${discordLimits.nicknameLength} character length limit imposed by Discord`,
               ephemeral: true
             });
           } else {

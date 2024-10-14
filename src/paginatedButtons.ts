@@ -1,104 +1,144 @@
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
+import {
+  ActionRowBuilder,
+  BaseMessageOptions,
+  ButtonBuilder,
+  ButtonStyle,
+  ChatInputCommandInteraction
+} from "discord.js";
 import {clipArray, discordLimits} from "./discordLimits";
-import {to2DArray} from "./utils/to2DArray";
 
-export type PaginatedButtonsState = 'active' | 'finished' | 'timedout' | 'error';
+export type PaginatedButtonsStatus = 'active' | 'finished' | 'timedout' | 'error';
 
-export type PaginatedButtonsStateSetter = (stateNew: PaginatedButtonsState) => void;
+export interface PaginatedButtonsState {
+  status: PaginatedButtonsStatus;
+  pageIndex: number;
+  totalPageCount: number;
+  error?: unknown;
+}
+
+export type PaginatedButtonsStatusSetter = (statusNew: PaginatedButtonsStatus) => void;
 
 const PaginatedButtonNamespace = 'PaginatedButtons';
 
-export function getElementsPerPage() {
-  return discordLimits.component.elementCount * (discordLimits.component.rowCount - 1);
+export function clampPageIndex(pageIndex: number, totalPageCount: number): number {
+  return Math.min(Math.max(pageIndex, 0), totalPageCount - 1);
 }
 
-export function getTotalPageCount<Type>(elements: Type[]): number {
-  return Math.ceil(elements.length / getElementsPerPage());
-}
-
-export function clampPage<Type>(page: number, elements: Type[]): number {
-  return Math.min(Math.max(page, 0), getTotalPageCount(elements) - 1);
-}
-
-export function getPaginatedButtons<Type>(
-  elements: Type[],
-  page: number,
+export function getPaginatedButtons(
+  pageIndex: number,
+  totalPageCount: number,
   isActive: boolean,
-  elementButtonBuilder: (element: Type, isActive: boolean) => ButtonBuilder,
   hasFinishControl: boolean,
 ) {
-  hasFinishControl = hasFinishControl && elements.length > 0;
-  if (!hasFinishControl && elements.length < (discordLimits.component.elementCount * discordLimits.component.rowCount)) {
-    // Can fit all on one page without navigation controls
-    return clipArray(to2DArray(elements, discordLimits.component.elementCount), discordLimits.component.rowCount)
-      .map((rowElements) => {
-        return new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(...rowElements.map(element => elementButtonBuilder(element, isActive)));
-      });
-  } else {
-    // Need to paginate or display finish button, dedicating bottom row for controls
-    const totalPageCount = getTotalPageCount(elements);
-    const elementsPerPage = getElementsPerPage();
-    const pageElements = elements.slice(elementsPerPage * page, elementsPerPage * (page + 1));
-    const hasNavigationControls = totalPageCount > 1;
-    const controls = new ActionRowBuilder<ButtonBuilder>();
-    if (hasNavigationControls) {
-      controls.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`${PaginatedButtonNamespace}:previous`)
-          .setLabel('Previous')
-          .setDisabled(!isActive || (page <= 0))
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`${PaginatedButtonNamespace}:currentPage`)
-          .setLabel(`${page + 1} / ${totalPageCount}`)
-          .setDisabled(true)
-          .setStyle(ButtonStyle.Secondary),
-      );
+  // Need to paginate or display finish button, dedicating bottom row for controls
+  const hasNavigationControls = totalPageCount > 1;
+  if (!hasFinishControl && !hasNavigationControls) {
+    return null;
+  }
+  const controls = new ActionRowBuilder<ButtonBuilder>();
+  if (hasNavigationControls) {
+    controls.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`${PaginatedButtonNamespace}:previous`)
+        .setLabel('Previous')
+        .setDisabled(!isActive || (pageIndex <= 0))
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`${PaginatedButtonNamespace}:currentPage`)
+        .setLabel(`${pageIndex + 1} / ${totalPageCount}`)
+        .setDisabled(true)
+        .setStyle(ButtonStyle.Secondary),
+    );
+  }
+  if (hasFinishControl) {
+    controls.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`${PaginatedButtonNamespace}:finish`)
+        .setLabel(`Finish`)
+        .setDisabled(!isActive)
+        .setStyle(ButtonStyle.Success)
+    );
+  }
+  if (hasNavigationControls) {
+    controls.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`${PaginatedButtonNamespace}:next`)
+        .setLabel('Next')
+        .setDisabled(!isActive || (pageIndex >= (totalPageCount - 1)))
+        .setStyle(ButtonStyle.Primary)
+    );
+  }
+  return controls;
+}
+
+async function getComponentsWithPaginatedButtons(
+  state: PaginatedButtonsState,
+  hasFinishControl: boolean,
+  getComponents?: (state: PaginatedButtonsState) => Promise<BaseMessageOptions['components'] | null>,
+) {
+  const paginatedButtons = getPaginatedButtons(
+    state.pageIndex,
+    state.totalPageCount,
+    state.status === 'active',
+    hasFinishControl,
+  );
+  let rows: BaseMessageOptions['components'] = [];
+  if (getComponents) {
+    const components = await getComponents(state);
+    if (components) {
+      if (paginatedButtons) {
+        rows = clipArray(components.slice(), discordLimits.component.rowCount - 1);
+      } else {
+        rows = clipArray(components.slice(), discordLimits.component.rowCount);
+      }
     }
-    if (hasFinishControl) {
-      controls.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`${PaginatedButtonNamespace}:finish`)
-          .setLabel(`Finish`)
-          .setDisabled(!isActive)
-          .setStyle(ButtonStyle.Success)
-      );
-    }
-    if (hasNavigationControls) {
-      controls.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`${PaginatedButtonNamespace}:next`)
-          .setLabel('Next')
-          .setDisabled(!isActive || (page >= (totalPageCount - 1)))
-          .setStyle(ButtonStyle.Primary)
-      );
-    }
-    return [
-      ...clipArray(to2DArray(pageElements, discordLimits.component.elementCount), discordLimits.component.rowCount - 1)
-        .map((rowElements) => {
-          return new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(...rowElements.map(element => elementButtonBuilder(element, isActive)));
-        }),
-      controls
+  }
+  if (paginatedButtons) {
+    rows = [
+      ...rows,
+      paginatedButtons,
     ];
+  }
+  if (rows.length) {
+    return rows;
+  } else {
+    return null;
   }
 }
 
+export async function defaultGetContent(state: PaginatedButtonsState) {
+  switch (state.status) {
+    case "active":
+      return null;
+    case "finished":
+      return null;
+    case "timedout":
+      return null;
+    case "error":
+      return 'Something went wrong...';
+    default:
+      return 'Something went wrong...';
+  }
+}
+
+export async function defaultGetComponents() {
+  return null;
+}
+
 export interface ExecutePaginatedButtonsOptions {
-  handleButton?: (customId: string, setState: PaginatedButtonsStateSetter) => Promise<void>,
+  handleButton?: (customId: string, setStatus: PaginatedButtonsStatusSetter) => Promise<void>,
   wasDeferred?: boolean,
   ephemeral?: boolean;
   hasFinishControl?: boolean;
   timeoutDuration?: number;
-  initialPage?: number;
+  initialPageIndex?: number;
+  getContent?: (state: PaginatedButtonsState) => Promise<BaseMessageOptions['content'] | null>,
+  getComponents?: (state: PaginatedButtonsState) => Promise<BaseMessageOptions['components'] | null>,
 }
 
-export async function executePaginatedButtons<Type>(
+export async function executePaginatedButtons(
   interaction: ChatInputCommandInteraction,
-  getElements: () => Promise<Type[]>,
-  getContent: (state: PaginatedButtonsState, error?: unknown) => Promise<string | null>,
-  elementButtonBuilder: (element: Type, isActive: boolean) => ButtonBuilder,
+  getTotalPageCount: () => Promise<number>,
   options?: ExecutePaginatedButtonsOptions,
 ) {
   const handleButton = options?.handleButton || null;
@@ -106,74 +146,95 @@ export async function executePaginatedButtons<Type>(
   const ephemeral = options?.ephemeral || true;
   const hasFinishControl = options?.hasFinishControl || true;
   const timeoutDuration = options?.timeoutDuration || 60_000;
-  const initialPage = options?.initialPage || 0;
+  const initialPageIndex = options?.initialPageIndex || 0;
+  const getContent = options?.getContent || defaultGetContent;
+  const getComponents = options?.getComponents || defaultGetComponents;
 
-  let elements = await getElements();
-  let state: PaginatedButtonsState = 'active';
-  const setState = (stateNew: PaginatedButtonsState) => {
-    state = stateNew;
+  const state: PaginatedButtonsState = {
+    status: 'active',
+    pageIndex: 0,
+    totalPageCount: 0,
+    error: undefined,
   }
-  let page = clampPage(initialPage, elements);
-  let content = await getContent(state);
+  state.totalPageCount = await getTotalPageCount();
+  state.pageIndex = clampPageIndex(initialPageIndex, state.totalPageCount);
+  const setStatus = (statusNew: PaginatedButtonsStatus) => {
+    state.status = statusNew;
+  }
+
+  let [content, components] = await Promise.all([
+    await getContent(state),
+    await getComponentsWithPaginatedButtons(state, hasFinishControl, getComponents),
+  ]);
   let response;
   if (wasDeferred) {
     response = await interaction.editReply({
       content: content ?? undefined,
-      components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
+      components: components ?? undefined,
     });
   } else {
     response = await interaction.reply({
       content: content ?? undefined,
+      components: components ?? undefined,
       ephemeral,
-      components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
     });
   }
-  while (state === 'active') {
+  while (state.status === 'active') {
     try {
       const action = await response.awaitMessageComponent({time: timeoutDuration});
       const [namespace, command] = action.customId.split(':');
       if (namespace === PaginatedButtonNamespace) {
         switch (command) {
           case 'previous':
-            page = clampPage(page - 1, elements);
+            state.pageIndex = clampPageIndex(state.pageIndex - 1, state.totalPageCount);
             break;
           case 'next':
-            page = clampPage(page + 1, elements);
+            state.pageIndex = clampPageIndex(state.pageIndex + 1, state.totalPageCount);
             break;
           case 'finish':
-            state = 'finished';
+            state.status = 'finished';
             break;
           default:
           // Ignore invalid buttons
         }
       } else {
-        // Defer to handler to update state elsewhere
-        await handleButton?.(action.customId, setState);
+        // Defer to handler to update status elsewhere
+        await handleButton?.(action.customId, setStatus);
       }
-      // Get fresh local state
-      elements = await getElements();
-      content = await getContent(state);
-      // Update page if it's out of bounds due to element count changing
-      page = clampPage(page, elements);
+      // Get fresh local status
+      state.totalPageCount = await getTotalPageCount();
+      // Update pageIndex if it's out of bounds due to total page count changing
+      state.pageIndex = clampPageIndex(state.pageIndex, state.totalPageCount);
+      [content, components] = await Promise.all([
+        await getContent(state),
+        await getComponentsWithPaginatedButtons(state, hasFinishControl, getComponents),
+      ]);
       await action.update({
         content: content ?? undefined,
-        components: getPaginatedButtons(elements, page, state === 'active', elementButtonBuilder, hasFinishControl)
+        components: components ?? undefined,
       });
     } catch (err) {
       const collectorError = err as Error;
       if (collectorError && collectorError.message === 'Collector received no interactions before ending with reason: time') {
-        state = 'timedout';
-        content = await getContent(state);
+        state.status = 'timedout';
+        [content, components] = await Promise.all([
+          await getContent(state),
+          await getComponentsWithPaginatedButtons(state, hasFinishControl, getComponents),
+        ]);
       } else {
-        state = 'error';
-        content = await getContent(state, err);
+        state.status = 'error';
+        state.error = err;
+        [content, components] = await Promise.all([
+          await getContent(state),
+          await getComponentsWithPaginatedButtons(state, hasFinishControl, getComponents),
+        ]);
       }
-      elements = await getElements();
-      // Update page if it's out of bounds due to element count changing
-      page = clampPage(page, elements);
+      state.totalPageCount = await getTotalPageCount();
+      // Update pageIndex if it's out of bounds due to total page count changing
+      state.pageIndex = clampPageIndex(state.pageIndex, state.totalPageCount);
       await interaction.editReply({
         content: content ?? undefined,
-        components: getPaginatedButtons(elements, page, false, elementButtonBuilder, hasFinishControl)
+        components: components ?? undefined,
       });
     }
   }

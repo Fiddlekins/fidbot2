@@ -40,6 +40,48 @@ This allows the command to be disabled based for roles, channels or specific use
 
 These are features that are triggered by entering a command, initiated by typing `/` into the message box.
 
+#### `/autoreply`
+
+Allows server admins to configure Fidbot to automatically reply to messages.
+
+When a new message is read by Fidbot it will check whether there are any rules in place that match it.
+A rule can be restricted to only apply to a specific user.
+There is the ability to further filter by matching the message against a regex pattern.
+
+The response itself is largely static, but can contain the following templated values:
+- `<user>` will be replaced by a discord mention of the user who posted the message this is in reply to
+
+The regex patterns use the following [syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions) but with some restrictions, mainly the inability to use the forward and back referencing.
+This is to avoid you cretins submitting a hilarious combination of regex and input that locks the bot up computing the result for all eternity in what's known as a ReDoS attack.
+
+It is worth noting that when there are multiple matching rules, only three will be executed.
+It prioritises user specific rules over generic rules, and within each category it prioritises by how recently created the rule is.
+
+##### `/autoreply create <response> <?user> <?match>`
+
+Creates a new autoreply rule.
+The `response` parameter is the text that Fidbot will respond with when executing a reply.
+
+The optional `user` parameter allows the rule to be constrained to only being applied to messages made by that user.
+Omitting it will have Fidbot check the rule against every message.
+
+The optional `match` parameter allows the rule to be constrained by the message content.
+This is used as a regex pattern, allowing for a wide range of matching options.
+At its simplest, you can treat it as a simple substring check - using `ping` as the value for this parameter will make Fidbot respond to any message that contains that text, such as "I like to play pingpong".
+Conversely, using basic regex such as using `[0-9]` for this parameter will make it respond to any message that contains a numerical digit.
+
+##### `/autoreply list <?response> <?user> <?match>`
+
+Fidbot displays a list of autoreply rules that only the user of the command can see.
+This provides the ID for each rule, which is required when wanting to delete a rule.
+
+The optional parameters will filter down the listed output to make it easier to manage lots of rules. 
+
+##### `/autoreply remove <id>`
+
+This removes a rule.
+The ID can be obtained by finding the rule in the list output.
+
 #### `/akun`
 
 A collection of tools for interacting with Akun, a quest website.

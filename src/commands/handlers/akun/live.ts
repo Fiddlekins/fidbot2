@@ -1,6 +1,6 @@
 import {ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
 import {clipText, discordLimits} from "../../../discordLimits";
-import {executePaginatedButtons, PaginatedButtonsState} from "../../../paginatedButtons";
+import {executePaginatedButtonsWithButtonElements} from "../../../paginatedButtonsWithButtonElements";
 import {getGuildSettings} from "../../../settings";
 import {getLive} from "./api/getLive";
 import {PartialStoryNode} from "./api/types/PartialStoryNode";
@@ -23,30 +23,16 @@ export async function executeLive(interaction: ChatInputCommandInteraction) {
     });
   if (stories.length) {
     const initialPage = interaction.options.getInteger('page');
-    await executePaginatedButtons<PartialStoryNode>(
+    await executePaginatedButtonsWithButtonElements<PartialStoryNode>(
       interaction,
       async () => {
         return stories;
-      },
-      async (state: PaginatedButtonsState, error?: unknown) => {
-        switch (state) {
-          case "active":
-            return null;
-          case "finished":
-            return null;
-          case "timedout":
-            return null;
-          case "error":
-            return 'Something went wrong...';
-          default:
-            return 'Something went wrong...';
-        }
       },
       partialStoryNodeButtonBuilder,
       {
         wasDeferred: true,
         ephemeral,
-        initialPage: initialPage ? initialPage - 1 : 0,
+        initialPageIndex: initialPage ? initialPage - 1 : 0,
       },
     );
   } else {

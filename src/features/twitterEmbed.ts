@@ -1,4 +1,4 @@
-import {EmbedAssetData, Message, Partialize} from "discord.js";
+import {EmbedAssetData, Message} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../Cache";
 import {clipText, discordLimits} from "../discordLimits";
@@ -12,13 +12,7 @@ import {
 } from "../types";
 import {dedupe} from "../utils/dedupe";
 import {extractSpoileredContent} from "../utils/extractSpoileredContent";
-
-function isBotAuthor(message: Message | Partialize<Message, "type" | "tts" | "pinned" | "system", "author" | "content" | "cleanContent">): boolean {
-  if (message.author) {
-    return message.author.id === message.client.user.id;
-  }
-  return false;
-}
+import {isBotAuthor} from "../utils/isBotAuthor";
 
 function isValidEmbedImage(image: EmbedAssetData | null): boolean {
   if (!image) {

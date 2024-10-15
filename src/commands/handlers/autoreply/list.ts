@@ -1,5 +1,5 @@
 import {ChatInputCommandInteraction} from "discord.js";
-import {RE2} from "re2-wasm";
+import RE2 from "re2";
 import {table} from 'table';
 import {TableUserConfig} from "table/dist/src/types/api";
 import {discordLimits} from "../../../discordLimits";

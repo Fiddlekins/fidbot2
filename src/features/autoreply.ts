@@ -1,6 +1,6 @@
 import {userMention} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
-import {RE2} from 're2-wasm';
+import RE2 from 're2';
 import {autoreplyCache, AutoreplyConfig} from "../commands/handlers/autoreply/config";
 import {getGuildSettings} from "../settings";
 import {Feature, MessageCreateHandler} from "../types";

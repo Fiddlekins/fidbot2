@@ -1,5 +1,5 @@
 import {ChatInputCommandInteraction} from "discord.js";
-import {RE2} from 're2-wasm';
+import RE2 from 're2';
 import {discordLimits} from "../../../discordLimits";
 import {getGuildSettings} from "../../../settings";
 import {autoreplyCache, AutoreplyConfig, GuildAutoreplyConfigs} from "./config";

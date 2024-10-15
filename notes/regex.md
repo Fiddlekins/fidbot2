@@ -28,3 +28,8 @@ For simplicity, I have chosen to go with the flag option at this point since it 
 ## Update
 
 The inability to use the `i` flag has become overbearing and I have switched to using the re2-wasm module.
+
+### Update
+
+Eventually re2-wasm died and consistently errored out with memory allocation failure errors.
+No mention of this on the repo and too lazy to look into it further, we're switching to node-re2 now.

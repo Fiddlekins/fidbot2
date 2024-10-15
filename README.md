@@ -152,7 +152,7 @@ Instructions on syntax can be found [here](https://dice-roller.github.io/documen
 
 #### `twitter-embed`
 
-This allows server admins to configure which users the [twitter embed](#twitter-embed) feature will be applied to.
+This allows server admins to configure which users the [twitter embed](#twitter-embed-1) feature will be applied to.
 Users on the blacklist will never have Fidbot embed their tweets.
 If a whitelist has more than zero users then it becomes active, and only users on the whitelist will have Fidbot embed their tweets (unless those users are also on the blacklist).
 

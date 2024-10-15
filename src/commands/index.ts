@@ -8,6 +8,7 @@ import {magic8ballData} from "./data/magic8ball";
 import {nicknameData} from "./data/nickname";
 import {rollData} from "./data/roll";
 import {settingsData} from "./data/settings";
+import {twitterEmbedData} from "./data/twitterEmbed";
 import {wideData} from "./data/wide";
 import {akunHandlers} from "./handlers/akun/akun";
 import {autoreplyHandlers} from "./handlers/autoreply/autoreply";
@@ -17,6 +18,7 @@ import {magic8ballHandlers} from "./handlers/magic8ball";
 import {nicknameHandlers} from "./handlers/nickname/nickname";
 import {rollHandlers} from "./handlers/roll";
 import {settingsHandlers} from "./handlers/settings";
+import {twitterEmbedHandlers} from "./handlers/twitterEmbed/twitterEmbed";
 import {wideHandlers} from "./handlers/wide";
 
 const commandMap: Record<string, Command> = {
@@ -28,6 +30,7 @@ const commandMap: Record<string, Command> = {
   [nicknameData.name]: {data: nicknameData, ...nicknameHandlers},
   [rollData.name]: {data: rollData, ...rollHandlers},
   [settingsData.name]: {data: settingsData, ...settingsHandlers},
+  [twitterEmbedData.name]: {data: twitterEmbedData, ...twitterEmbedHandlers},
   [wideData.name]: {data: wideData, ...wideHandlers},
 };
 

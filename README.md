@@ -150,6 +150,28 @@ Roll complex RPG dice by executing the `input` parameter.
 
 Instructions on syntax can be found [here](https://dice-roller.github.io/documentation/guide/notation/).
 
+#### `twitter-embed`
+
+This allows server admins to configure which users the [twitter embed](#twitter-embed) feature will be applied to.
+Users on the blacklist will never have Fidbot embed their tweets.
+If a whitelist has more than zero users then it becomes active, and only users on the whitelist will have Fidbot embed their tweets (unless those users are also on the blacklist).
+
+#### `twitter-embed blacklist <?user>`
+
+If the optional `<user>` parameter is provided then that user will be added to the blacklist if not already on it, or removed from the blacklist if they are.
+Fidbot will confirm which action was taken in response text.
+
+If the parameter is omitted instead, then a list of users on the blacklist will be displayed as buttons.
+Clicking the button will remove the user from the list.
+
+#### `twitter-embed whitelist <?user>`
+
+If the optional `<user>` parameter is provided then that user will be added to the whitelist if not already on it, or removed from the whitelist if they are.
+Fidbot will confirm which action was taken in response text.
+
+If the parameter is omitted instead, then a list of users on the whitelist will be displayed as buttons.
+Clicking the button will remove the user from the list.
+
 #### `/wide <text>`
 
 Makes Fidbot say the given `text` but wider.

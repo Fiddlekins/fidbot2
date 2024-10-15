@@ -1,6 +1,7 @@
 import {EmbedAssetData, Message} from "discord.js";
 import {setTimeout} from 'node:timers/promises'
 import {Cache} from "../Cache";
+import {twitterEmbedBlacklistCache, twitterEmbedWhitelistCache} from "../commands/handlers/twitterEmbed/config";
 import {clipText, discordLimits} from "../discordLimits";
 import {getGuildSettings} from "../settings";
 import {
@@ -13,6 +14,15 @@ import {
 import {dedupe} from "../utils/dedupe";
 import {extractSpoileredContent} from "../utils/extractSpoileredContent";
 import {isBotAuthor} from "../utils/isBotAuthor";
+
+function isUserHandled(guildId: string, userId: string) {
+  const guildWhitelist = twitterEmbedWhitelistCache.get(guildId) || {};
+  if (Object.keys(guildWhitelist).length && !guildWhitelist[userId]) {
+    return false;
+  }
+  const guildBlacklist = twitterEmbedBlacklistCache.get(guildId) || {};
+  return !guildBlacklist[userId];
+}
 
 function isValidEmbedImage(image: EmbedAssetData | null): boolean {
   if (!image) {
@@ -169,7 +179,13 @@ async function messageCreate(message: Parameters<MessageCreateHandler>[0]) {
     return;
   }
   const isFeatureEnabled = message.guildId ? getGuildSettings(message.guildId).twitterEmbed : false;
-  if (isFeatureEnabled && message.content.length) {
+  if (!isFeatureEnabled) {
+    return;
+  }
+  if (!isUserHandled(message.guildId || '', message.member?.user.id || '')) {
+    return;
+  }
+  if (message.content.length) {
     const twitterUrls = getFixedTwitterUrls(message.content, getEmbedUrls(message));
     if (twitterUrls.length) {
       cache.set(message.id, new TwitterEmbedMonitor(message));
@@ -182,7 +198,13 @@ async function messageUpdate(oldMessage: Parameters<MessageUpdateHandler>[0], ne
     return;
   }
   const isFeatureEnabled = newMessage.guildId ? getGuildSettings(newMessage.guildId).twitterEmbed : false;
-  if (isFeatureEnabled && newMessage.content?.length) {
+  if (!isFeatureEnabled) {
+    return;
+  }
+  if (!isUserHandled(newMessage.guildId || '', newMessage.member?.user.id || '')) {
+    return;
+  }
+  if (newMessage.content?.length) {
     const twitterEmbedMonitor = cache.get(newMessage.id);
     if (twitterEmbedMonitor) {
       twitterEmbedMonitor.setLatestMessage(newMessage);

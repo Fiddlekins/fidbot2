@@ -53,7 +53,7 @@ function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
 
 function extractTwitterUrls(content: string): string[] {
   return Array.from(content.matchAll(
-      /(https?:\/\/(?:twitter|x)\.com[^\s]+?)(\s|$)/ig),
+      /(https?:\/\/(?:twitter\.com|x\.com|bsky\.app)[^\s]+?)(\s|$)/ig),
     m => m[1]
   );
 }
@@ -66,11 +66,16 @@ function removeUnembeddedUrls(content: string): string {
 
 function isTwitterUrlEmbeddable(twitterUrl: string): boolean {
   // Twitter posts that get embedded are of the format `https://<domain>/<username>/status/<tweetId>`
-  return /https?:\/\/[^\\]+\/[^\\]+\/status\/\d+/.test(twitterUrl);
+  return /https?:\/\/(?:twitter|x)\.com\/[^\/]+\/status\/\d+/.test(twitterUrl)
+    // Bluesky profiles that get embedded are of the format `https://<domain>/profile/<username>`
+    // Bluesky posts that get embedded are of the format `https://<domain>/profile/<username>/post/<postId>`
+    || /https?:\/\/bsky\.app\/profile\/[^\/]+(?:\/?$|\/post\/[A-z0-9]+)/.test(twitterUrl);
 }
 
 function fixTwitterUrl(url: string): string {
-  return url.replace(/^https?:\/\/(?:twitter|x)\.com/, 'https://fxtwitter.com');
+  return url
+    .replace(/^https?:\/\/(?:twitter|x)\.com/, 'https://fxtwitter.com')
+    .replace(/^https?:\/\/bsky\.app/, 'https://bskyx.app');
 }
 
 function normaliseTwitterUrl(url: string): string {
@@ -132,14 +137,24 @@ class TwitterEmbedMonitor {
               if (newResponseContent !== this.lastResponseContent) {
                 this.lastResponseContent = newResponseContent;
                 if (priorResponse) {
-                  this.response = await priorResponse.edit(newResponseContent);
+                  try {
+                    this.response = await priorResponse.edit(newResponseContent);
+                  } catch (err) {
+                    // ignore error, it's possible that multiple async interactions cause a timing issue where the priorResponse should now be a new message
+                  }
                 } else {
-                  this.response = await handledMessage.channel.send(newResponseContent);
+                  try {
+                    this.response = await handledMessage.channel.send(newResponseContent);
+                  } catch (err) {
+                    // log error if it happens, though I've not observed it before
+                    console.error(err);
+                  }
                 }
               }
             } else {
               if (priorResponse) {
                 try {
+                  this.response = null;
                   await priorResponse.delete();
                 } catch (err) {
                   // ignore error, typically means post has already been deleted by something

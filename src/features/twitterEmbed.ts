@@ -36,7 +36,7 @@ function isValidEmbedImage(image: EmbedAssetData | null): boolean {
 }
 
 function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
-  return message.embeds
+  const embedUrls = message.embeds
     .map((embed) => {
       if (embed.title === 'X'
         && /^https?:\/\/(?:twitter|x)\.com/i.test(embed.url || '')
@@ -46,9 +46,17 @@ function getEmbedUrls(message: Parameters<MessageUpdateHandler>[1]): string[] {
         // The Discord native embed is lacking all tweet content and thus considered to be failed
         return null;
       }
+      // Bluesky can be embedded in a way that has thumbnail data but not image data, which Discord renders as text only embed
+      if (/^https?:\/\/bsky\.app/i.test(embed.url || '')
+        && embed.thumbnail
+        && !embed.image
+      ) {
+        return null;
+      }
       return embed.url;
     })
     .filter((url): url is string => url !== null);
+  return embedUrls;
 }
 
 function extractTwitterUrls(content: string): string[] {
